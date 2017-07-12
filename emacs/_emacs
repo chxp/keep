@@ -57,12 +57,7 @@
 
 
 
-;;;;;; ================== General config ==================
-(setq diredp-hide-details-initially-flag nil) ;; for emacs 24.4 
-(defalias 'qrr 'query-replace-regexp)
-(setq default-directory "~/")
-
-;;;;;; ================== el-get config ==================
+;;;;;; ==================================== el-get config ====================================
 (add-to-list 'load-path "~/.emacs.d/mine")
 (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
 (add-to-list 'load-path "~/.emacs.d/elpa")
@@ -77,18 +72,25 @@
 
 (el-get 'sync)
 
-;;;;;; ================== elpa config ==================
+
+
+;;;;;; ==================================== elpa config ====================================
 (require 'package)
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
 (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
 (package-initialize)
 
-;;;;;; ================== guide-key ==================
-(require 'guide-key)
-(guide-key-mode 1)
 
-;;;;;; ==================  base config ==================
+
+;;;;;; ==================================== General config ====================================
+(setq diredp-hide-details-initially-flag nil) ;; for emacs 24.4 
+(defalias 'qrr 'query-replace-regexp)
+(setq default-directory "~/")
+
+
+
+;;;;;; ====================================  base config ====================================
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'forward)
 (setq default-major-mode 'text-mode)
@@ -101,6 +103,10 @@
 (setq mouse-yank-at-point t)
 ;;指针不要闪，我得眼睛花了
 (blink-cursor-mode -1)
+
+;; guide-key
+(require 'guide-key)
+(guide-key-mode 1)
 
 ;; auto image
 (setq auto-image-file-mode t) 
@@ -133,7 +139,9 @@
 	((looking-at "\\s\)") (forward-char 1) (backward-list 1))
 	(t (self-insert-command (or arg 1)))))
 
-;;;;;; ================== ibuffer config ==================
+
+
+;;;;;; ==================================== ibuffer config ====================================
 ;;;启用ibuffer支持，增强*buffer* 
 (require 'fullframe)
 (require 'ibuffer)  
@@ -176,9 +184,45 @@
 	      filename-and-process)))
 (setq ibuffer-filter-group-name-face 'font-lock-doc-face)
 
+;; group ibuffer
+(setq ibuffer-saved-filter-groups
+      (quote (("default"
+	       ("dired" (mode . dired-mode))
+	       ("perl" (mode . cperl-mode))
+	       ("erc" (mode . erc-mode))
+	       ("planner" (or
+			   (name . "^\\*Calendar\\*$")
+			   (name . "^diary$")
+			   (mode . muse-mode)))
+	       ("emacs" (or
+			 (name . "^\\*scratch\\*$")
+			 (name . "^\\*Messages\\*$")))
+	       ("gnus" (or
+			(mode . message-mode)
+			(mode . bbdb-mode)
+			(mode . mail-mode)
+			(mode . gnus-group-mode)
+			(mode . gnus-summary-mode)
+			(mode . gnus-article-mode)
+			(name . "^\\.bbdb$")
+			(name . "^\\.newsrc-dribble")))))))
+
+(add-hook 'ibuffer-mode-hook
+	  (lambda ()
+	    (ibuffer-switch-to-saved-filter-groups "default")))
+
+;; setup files ending in “.org.txt” to open in org-mode
+(add-to-list 'auto-mode-alist '("\\.org.txt\\'" . org-mode))
+
+;; ansi-color
+(require 'ansi-color)
+(defun display-ansi-colors ()
+  (interactive)
+  (ansi-color-apply-on-region (point-min) (point-max)))
 
 
-;;;;;; ================== window config ==================
+
+;;;;;; ==================================== window config ====================================
 ;; 四窗口
 (require 'window-numbering)
 (window-numbering-mode 1)
@@ -224,21 +268,7 @@
 (global-set-key (kbd "C-x 9 v") 'change-split-type-3-v)
 (global-set-key (kbd "C-x 9 h") 'change-split-type-3-h)
 
-
-
-;;;;;; ================== smart-tab ==================
-(global-set-key (kbd "M-/") 'hippie-expand)
-(setq hippie-expand-try-functions-list
-      '(try-complete-file-name-partially
-	try-complete-file-name
-	try-expand-dabbrev
-	try-expand-dabbrev-all-buffers
-	try-expand-dabbrev-from-kill))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; pingmusheding
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;  full screen;;;;;;;;;;;;;;;;;;
+;;; full screen
 (global-set-key [f11] 'my-fullscreen)
 
 (defun my-fullscreen ()
@@ -263,7 +293,18 @@
 
 
 
-;;;;;; ================== theme ==================
+;;;;;; ==================================== smart-tab ====================================
+(global-set-key (kbd "M-/") 'hippie-expand)
+(setq hippie-expand-try-functions-list
+      '(try-complete-file-name-partially
+	try-complete-file-name
+	try-expand-dabbrev
+	try-expand-dabbrev-all-buffers
+	try-expand-dabbrev-from-kill))
+
+
+
+;;;;;; ==================================== theme ====================================
 (require 'color-theme)
 ;;(color-theme-calm-forest)
 ;;(color-theme-euphoria)
@@ -280,7 +321,7 @@
 ;;(color-theme-wheat)
 
 
-;;;;;; ================== font cfg ==================
+;;;;;; ==================================== font cfg ====================================
 ;;; Setting English Font
 (set-face-attribute
   'default nil :font "Consolas 13")
@@ -311,64 +352,7 @@
 
 
 
-;;;;;; ================== C config ==================
-;;设置C语言编译命令
-(set 'compile-command' "gcc -g -Wall")
-
-;;定义f9为编译命令
-(global-set-key [f9] 'compile) 
-
-;;显示行列号
-(setq column-number-mode t)
-(setq line-number-mode t)
-
-;;把c语言风格设置为k&r风格
-(add-hook 'c-mode-hook
-	  '(lambda ()
-	     (c-set-style "k&r")))
-
-;;把C++语言风格设置为stroustrup风格
-(add-hook 'c++-mode-hook
-	  '(lambda()
-	     (c-set-style "stroustrup")))
-
-
-
-;;;;;; ================== R config ==================
-;; ESS
-(setq  ess-tab-complete-in-script t)
-
-;; 解决交互窗口自动下拉
-(setq comint-scroll-to-bottom-on-input t)
-(setq comint-scroll-to-bottom-on-output t)
-(setq comint-move-point-for-output t)
-
-
-
-;;;;;; ================== agenda config ==================
-;;insert-current-date
-(defun insert-current-date ()
-  "Insert the current date"
-  (interactive "*")
-  (insert (format-time-string "%Y/%m/%d %H:%M:%S" (current-time))))
-
-(global-set-key "\C-xd" 'insert-current-date)
-
-(setq display-time-24hr-format t)
-(setq display-time-day-and-date t)
-(display-time)
-
-(setq appt-issue-message t)
-
-;; 设置阴历显示，在 calendar 上用 pC 显示阴历
-(setq chinese-calendar-celestial-stem
-      ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
-(setq chinese-calendar-terrestrial-branch
-      ["子" "丑" "寅" "卯" "辰" "巳" "戊" "未" "申" "酉" "戌" "亥"])
-
-
-
-;;;;;; ================== cal config ==================
+;;;;;; ==================================== cal config ====================================
 ;; word-count
 (autoload 'word-count-mode "word-count"
   "Minor mode to count words." t nil)
@@ -376,64 +360,7 @@
 
 
 
-;;;;;; ================== org-mode ==================
-;; org-mode
-(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cb" 'org-iswitchb)
-(global-set-key "\C-c[" 'org-agenda-file-to-front)
-(global-set-key "\C-c]" 'org-remove-file)
-
-(add-hook 'org-mode-hook 'turn-on-font-lock)  
-(setq org-src-fontify-natively t) ;; 代码高亮
-
-;; turn on soft wrapping mode for org mode
-(add-hook 'org-mode-hook
-	  (lambda () (setq truncate-lines nil)))
-
-;; org-mode 8 no odt or mkdown export solvation
-(eval-after-load "org"
-  '(require 'ox-md nil t)
-  )
-(eval-after-load "org"
-  '(require 'ox-odt nil t)
-  )
-
-;; global keybinding
-(global-set-key "\C-c L" 'org-insert-link-global)
-(global-set-key "\C-c o" 'org-open-at-point-global)
-
-;; set org-todo-keywords
-(setq org-todo-keywords 
-      '((sequence "TODO" "VERIFY" "|" "DONE" "DELAYED" "DELEGATED"))) 
-
-;;item time
-(setq org-log-done 'time) 
-
-;;iimage minomode
-(autoload 'iimage-mode "iimage" "Support Inline image minor mode." t)
-(autoload 'turn-on-iimage-mode "iimage" "Turn on Inline image minor mode." t)
-
-(defun org-toggle-iimage-in-org ()
-  "display images in your org file"
-  (interactive)
-  (if (face-underline-p 'org-link)
-      (set-face-underline-p 'org-link nil)
-    (set-face-underline-p 'org-link t))
-  (iimage-mode))
-
-;;子项目都被标记为完成时，父项目自动标记为完成
-(defun org-summary-todo (n-done n-not-done)
-     "Switch entry to DONE when all subentries are done, to TODO otherwise."
-     (let (org-log-done org-log-states)  ; turn off logging
-       (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
-
-(add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
-
-
- 
-;;;;;; ================== rect cfg ==================
+;;;;;; ==================================== rect cfg ====================================
 ;;Support for marking a rectangle of text with highlighting.
 (define-key ctl-x-map "r\C-@" 'rm-set-mark)
 (define-key ctl-x-map [?r ?\C-\ ] 'rm-set-mark)
@@ -495,21 +422,22 @@
 (load "auctex.el" nil t t)
 (load "preview-latex.el" nil t t)
 (setq org-latex-create-formula-image-program 'imagemagick)
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;ido 模式　
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+;;;;;; ========================== ido cfg ====================================
 (require 'ido)
 (ido-mode t)
 
-;;;; from purcell
+;; from purcell
 ;; ido everwhere conflict with helm
 ;; (ido-everywhere t)
 (setq ido-enable-flex-matching t)
 (setq ido-use-filename-at-point nil)
 (setq ido-auto-merge-work-directories-length 0)
 (setq ido-use-virtual-buffers t)
-;;;; Use smex to handle M-x
-;;;; Change path for ~/.smex-items
+;; Use smex to handle M-x
+;; Change path for ~/.smex-items
 (setq smex-save-file (expand-file-name ".smex-items" user-emacs-directory))
 (global-set-key [remap execute-extended-command] 'smex)
 (require 'idomenu)
@@ -517,6 +445,8 @@
 (setq ido-default-buffer-method 'selected-window)
 ;; http://www.reddit.com/r/emacs/comments/21a4p9/use_recentf_and_ido_together/cgbprem
 (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;; paredit 
@@ -558,32 +488,26 @@
   (if (memq this-command paredit-minibuffer-commands)
       (enable-paredit-mode)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; recentf-mode 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;; ==================================== recentf-mode ====================================
 (recentf-mode 1)
 (setq recentf-max-saved-items 1000
       recentf-exclude '("/tmp/" "/ssh:"))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;shell
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; ==================================== shell cfg ====================================
+;;
 (require 'shell-completion)
-;;; shell 环境
+;; shell 环境
 (setq shell-file-name "/bin/bash")
 
 ;; ansi for shell
 (require 'ansi-color)
-;; (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
-;; (add-to-list 'comint-output-filter-functions 'ansi-color-process-output)
-;; (ansi-color-for-comint-mode-on)
-;; (setq ansi-color-for-comint-mode t)
 
-;;; 如果你希望使用一个支持 ANSI color 的 Shell 进程
+;; 如果你希望使用一个支持 ANSI color 的 Shell 进程
 (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t) 
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on t)
-
 
 (defvar server-buffer-clients)
 (when (and (fboundp 'server-start) (string-equal (getenv "TERM") 'xterm))
@@ -592,15 +516,42 @@
     (and server-buffer-clients (server-done)))
   (add-hook 'kill-buffer-hook 'fp-kill-server-with-buffer-routine))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;tramp
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; add local bashrc
+(defun set-exec-path-from-shell-PATH ()
+  (let ((path-from-shell (replace-regexp-in-string
+                          "[ \t\n]*$"
+                          ""
+                          (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
+    (setenv "PATH" path-from-shell)
+    (setq eshell-path-env path-from-shell) ; for eshell users
+    (setq exec-path (split-string path-from-shell path-separator))))
+
+(when window-system (set-exec-path-from-shell-PATH))
+
+
+
+;;;;;; ==================================== multi term cfg ====================================
+;; 通过设置multi-term-program变量
+;; 我们可以指定新建的terminal使用何种shell
+(setq multi-term-program "/bin/bash")
+
+(defadvice ansi-term (after advice-term-line-mode activate)
+  (term-line-mode))
+
+;;;Toggles term between line mode and char mode"
+(defun jnm/term-toggle-mode ()
+  "Toggles term between line mode and char mode"
+  (interactive)
+  (if (term-in-line-mode)
+      (term-char-mode)
+    (term-line-mode)))
+
+
+
+;;;;;; ==================================== tramp cfg ====================================
+;;
 (require 'tramp)
 (setq tramp-default-method "scp")
-
-;; (prefer-coding-system 'utf-8-unix)
-;; (setq tramp-remote-process-environment ())
-;; (add-to-list 'tramp-remote-process-environment "LC_ALL=zh_CN.UTF8" 'append)
 
 (defun make-comint-directory-tracking-work-remotely ()
   "Add this to comint-mode-hook to make directory tracking work
@@ -639,41 +590,269 @@ Dmitriy Igrishin's patched version of comint.el."
         ;; comint's "Type space to flush" swallows space. put it back in.
         (setq unread-command-events (listify-key-sequence " "))))
 
-
  (add-hook 'comint-mode-hook (lambda () (set (make-local-variable 'comint-file-name-prefix) (or (file-remote-p default-directory) ""))))
-
-;;;; exec-path-from-shell from purcell
-;;(dolist (var '("SSH_AUTH_SOCK" "SSH_AGENT_PID" "GPG_AGENT_INFO" "LANG" "LC_CTYPE"))
-;;  (add-to-list 'exec-path-from-shell-variables var))
 
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;perl
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defalias 'perl-mode 'cperl-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; uniquify
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; ==================================== uniquify cfg ====================================
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'reverse)
 (setq uniquify-separator " • ")
 (setq uniquify-after-kill-buffer-p t)
 (setq uniquify-ignore-buffers-re "^\\*")
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; diff-hl
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; ==================================== diff-hl ====================================
 (require 'diff-hl)
 (add-hook 'prog-mode-hook 'turn-on-diff-hl-mode)
 (add-hook 'vc-dir-mode-hook 'turn-on-diff-hl-mode)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; org-capture
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;; ==================================== dired cfg ====================================
+(define-key global-map (kbd "C-x C-j") 'dired-jump)
+(define-key global-map (kbd "C-x 4 C-j") 'dired-jump-other-window)
+(put 'dired-find-alternate-file 'disabled t)
+
+(setq dired-listing-switches "-alh") ;;;使文件大小显示为MB,KB等
+
+;;;; from purcell
+(require 'dired+)
+(require 'dired-sort)
+(when (fboundp 'global-dired-hide-details-mode)
+  (global-dired-hide-details-mode -1))
+(setq dired-recursive-deletes 'top)
+(define-key dired-mode-map [mouse-2] 'dired-find-file)
+(add-hook 'dired-mode-hook
+ 	  (lambda () (guide-key/add-local-guide-key-sequence "%")))
+
+;;;; human readable file size
+(setq dired-listing-switches "-alh")
+(setq directory-free-space-args "-Pm")
+ (defun ls-lisp-format-file-size (file-size human-readable)
+   (if (or (not human-readable)
+           (< file-size 1024))
+       (format (if (floatp file-size) " %11.0f" " %11d") file-size)
+     (do ((file-size (/ file-size 1024.0) (/ file-size 1024.0))
+          ;; kilo, mega, giga, tera, peta, exa
+          (post-fixes (list "k" "M" "G" "T" "P" "E") (cdr post-fixes)))
+         ((< file-size 1024) (format " %10.0f%s"  file-size (car post-fixes))))))
+
+
+
+;;;;;; ==================================== kbd cfg ====================================
+;; 分割窗口，建立五个shell
+(fset 'wt4
+   [?\C-x ?2 ?\C-x ?3 ?\M-3 ?\C-x ?3 ?\M-1 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?1 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?2 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?3 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?4 return ?\M-2 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?5 return ?\M-3 ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?h ?o ?m ?e ?- ?s ?h ?e ?l ?l return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?1 return])
+
+
+
+;;;;;; ==================================== helm ====================================
+;; 
+(require 'helm)
+(require 'helm-config)
+
+;; (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+(helm-mode 1)
+
+;; using ido elsewhere
+(add-to-list 'helm-completing-read-handlers-alist '(execute-extended-command . ido))
+(add-to-list 'helm-completing-read-handlers-alist '(find-files . ido))
+
+
+
+;;;;;; ==================================== C config ====================================
+;;设置C语言编译命令
+(set 'compile-command' "gcc -g -Wall")
+
+;;定义f9为编译命令
+(global-set-key [f9] 'compile) 
+
+;;显示行列号
+(setq column-number-mode t)
+(setq line-number-mode t)
+
+;;把c语言风格设置为k&r风格
+(add-hook 'c-mode-hook
+	  '(lambda ()
+	     (c-set-style "k&r")))
+
+;;把C++语言风格设置为stroustrup风格
+(add-hook 'c++-mode-hook
+	  '(lambda()
+	     (c-set-style "stroustrup")))
+
+
+
+;;;;;; ==================================== R cfg ====================================
+;; ESS
+(setq  ess-tab-complete-in-script t)
+
+;; 解决交互窗口自动下拉
+(setq comint-scroll-to-bottom-on-input t)
+(setq comint-scroll-to-bottom-on-output t)
+(setq comint-move-point-for-output t)
+
+
+
+;;;;;; ==================================== perl cfg ====================================
+(defalias 'perl-mode 'cperl-mode)
+
+
+
+;;;;;; ==================================== python cfg ====================================
+;;
+(when (executable-find "ipython")
+   (setq python-shell-interpreter "ipython"))
+
+;; 更改键
+(eval-after-load "python"
+   '(define-key python-mode-map (kbd "<C-return>") 'python-shell-send-region))
+
+;;;; PYTHON-MODE configuration
+(eval-after-load "python-mode"
+  '(define-key python-mode-map (kbd "C-c C-p") 'py-execute-region))
+(eval-after-load "python-mode"
+  '(define-key python-mode-map (kbd "<C-return>") 'py-execute-line))
+
+;; elpy
+(elpy-enable)
+(elpy-use-ipython)
+
+(defvar myPackages
+  '(better-defaults
+    ein
+    elpy
+    flycheck
+    material-theme
+    py-autopep8))
+
+;; use flycheck not flymake with elpy
+(when (require 'flycheck nil t)
+  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+  (add-hook 'elpy-mode-hook 'flycheck-mode))
+
+;; enable autopep8 formatting on save
+(require 'py-autopep8)
+(add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+
+(setq python-shell-interpreter "python2"
+      python-shell-interpreter-args "-i")
+
+;; ;; ansi-color in ipython no working?
+(setq py-python-command-args '("--colors=linux"))
+
+;; flymake
+(when (load "flymake" t)
+  (defun flymake-pyflakes-init ()
+    (let* ((temp-file (flymake-init-create-temp-buffer-copy
+		       'flymake-create-temp-inplace))
+           (local-file (file-relative-name
+			temp-file
+			(file-name-directory buffer-file-name))))
+      (list "pycheckers"  (list local-file))))
+  (add-to-list 'flymake-allowed-file-name-masks
+	       '("\\.py\\'" flymake-pyflakes-init)))
+
+
+
+;;;;;; ==================================== agenda config ====================================
+;;insert-current-date
+(defun insert-current-date ()
+  "Insert the current date"
+  (interactive "*")
+  (insert (format-time-string "%Y/%m/%d %H:%M:%S" (current-time))))
+
+(global-set-key "\C-xd" 'insert-current-date)
+
+(setq display-time-24hr-format t)
+(setq display-time-day-and-date t)
+(display-time)
+
+(setq appt-issue-message t)
+
+;; 设置阴历显示，在 calendar 上用 pC 显示阴历
+(setq chinese-calendar-celestial-stem
+      ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+(setq chinese-calendar-terrestrial-branch
+      ["子" "丑" "寅" "卯" "辰" "巳" "戊" "未" "申" "酉" "戌" "亥"])
+
+
+
+;;;;;; ==================================== org cfg ====================================
+;; org-mode
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cb" 'org-iswitchb)
+(global-set-key "\C-c[" 'org-agenda-file-to-front)
+(global-set-key "\C-c]" 'org-remove-file)
+
+(add-hook 'org-mode-hook 'turn-on-font-lock)  
+(setq org-src-fontify-natively t) ;; 代码高亮
+
+;; turn on soft wrapping mode for org mode
+(add-hook 'org-mode-hook
+	  (lambda () (setq truncate-lines nil)))
+
+;; org-mode 8 no odt or mkdown export solvation
+(eval-after-load "org"
+  '(require 'ox-md nil t)
+  )
+(eval-after-load "org"
+  '(require 'ox-odt nil t)
+  )
+
+;; global keybinding
+(global-set-key "\C-c L" 'org-insert-link-global)
+(global-set-key "\C-c o" 'org-open-at-point-global)
+
+;; set org-todo-keywords
+(setq org-todo-keywords 
+      '((sequence "TODO" "VERIFY" "|" "DONE" "DELAYED" "DELEGATED"))) 
+
+;;item time
+(setq org-log-done 'time) 
+
+;;iimage minomode
+(autoload 'iimage-mode "iimage" "Support Inline image minor mode." t)
+(autoload 'turn-on-iimage-mode "iimage" "Turn on Inline image minor mode." t)
+
+(defun org-toggle-iimage-in-org ()
+  "display images in your org file"
+  (interactive)
+  (if (face-underline-p 'org-link)
+      (set-face-underline-p 'org-link nil)
+    (set-face-underline-p 'org-link t))
+  (iimage-mode))
+
+;;子项目都被标记为完成时，父项目自动标记为完成
+(defun org-summary-todo (n-done n-not-done)
+     "Switch entry to DONE when all subentries are done, to TODO otherwise."
+     (let (org-log-done org-log-states)  ; turn off logging
+       (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+(add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+
+;; input some greek chars
+(global-set-key (kbd "C-x 8 a") "α")
+(global-set-key (kbd "C-x 8 b") "β")
+(global-set-key (kbd "C-x 8 d") "δ")
+(global-set-key (kbd "C-x 8 e") "ε")
+(global-set-key (kbd "C-x 8 w") "ψ")
+
+(global-set-key (kbd "C-x 8 D") "Δ")
+(global-set-key (kbd "C-x 8 W") "Ψ")
+
+
+
+;;;;;; ==================================== org-capture ====================================
+;;
 ;(setq org-default-notes-file (concat org-directory "/.notes.org"))
 (global-set-key "\C-cc" 'org-capture)
 ;; capture template
@@ -683,9 +862,9 @@ Dmitriy Igrishin's patched version of comint.el."
         ("j" "Journal" entry (file+datetree "~/.orgf/journal.org")
              "* %?\nEntered on %U\n  %i\n  %a")))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;GITHUB 文章 PUBLISH
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+;;;;;; ==================================== publish cfg ====================================
 (setq org-publish-project-alist
       '(
 	
@@ -714,72 +893,18 @@ Dmitriy Igrishin's patched version of comint.el."
 	))
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; dired 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(define-key global-map (kbd "C-x C-j") 'dired-jump)
-(define-key global-map (kbd "C-x 4 C-j") 'dired-jump-other-window)
-(put 'dired-find-alternate-file 'disabled t)
 
-(setq dired-listing-switches "-alh") ;;;使文件大小显示为MB,KB等
-
-;;;;
-;;;; from purcell
-(require 'dired+)
-(require 'dired-sort)
-(when (fboundp 'global-dired-hide-details-mode)
-  (global-dired-hide-details-mode -1))
-(setq dired-recursive-deletes 'top)
-(define-key dired-mode-map [mouse-2] 'dired-find-file)
-(add-hook 'dired-mode-hook
- 	  (lambda () (guide-key/add-local-guide-key-sequence "%")))
-
-;;;; human readable file size
-(setq dired-listing-switches "-alh")
-(setq directory-free-space-args "-Pm")
- (defun ls-lisp-format-file-size (file-size human-readable)
-   (if (or (not human-readable)
-           (< file-size 1024))
-       (format (if (floatp file-size) " %11.0f" " %11d") file-size)
-     (do ((file-size (/ file-size 1024.0) (/ file-size 1024.0))
-          ;; kilo, mega, giga, tera, peta, exa
-          (post-fixes (list "k" "M" "G" "T" "P" "E") (cdr post-fixes)))
-         ((< file-size 1024) (format " %10.0f%s"  file-size (car post-fixes))))))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; org-latex
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 使用xelatex一步生成PDF
+;;;;;; ==================================== org latex cfg ====================================
+;; require
 (require 'org-install)
-;(require 'org-latex)
-;;(require 'ox-latex) ;needed for org8
-;(unless (boundp 'org-latex-classes)
-;  (setq org-latex-classes nil))
+(require 'ox-bibtex) 
 
-;;(setq org-latex-to-pdf-process (list "latexmk -f -pdf %s"))
-;; (setq org-latex-to-pdf-process
-;;        '("xelatex -interaction nonstopmode %f"
-;;  	"xelatex -interaction nonstopmode %f"))
-;;(Setq org-latex-to-pdf-process '("xelatex %f && bibtex %f && xelatex %f && xelatex %f"))
-;; (setq org-latex-pdf-process (quote ("texi2dvi --pdf --clean --verbose --batch %f" "bibtex %b" "texi2dvi --pdf --clean --verbose --batch %f" "texi2dvi --pdf --clean --verbose --batch %f")))
-
-;; ;; Use XeLaTeX to export PDF in Org-mode OK:
-;; (setq org-latex-pdf-process
-;;       (quote 
-;;        ("xelatex -interaction nonstopmode -output-directory %o %f"
-;; ;;	"bibtex $(basename %b)"
-;; 	"bibtex %b"
-;;         "xelatex -interaction nonstopmode -output-directory %o %f"
-;;         "xelatex -interaction nonstopmode -output-directory %o %f")))
-
-;; Use it to generate the sjtu thesis pdf
+;; Use latexmk to generate the thesis pdf
 (setq org-latex-pdf-process
       (quote 
        ("latexmk -f -xelatex -silent %f")))
 
 ;;(setq reftex-cite-format 'natbib)
-
-;;(setq org-latex-to-pdf-process (list "latexmk -pdf %f")) ;;OK
 
 (setq org-export-latex-listings t)
 ;;(setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
@@ -787,584 +912,23 @@ Dmitriy Igrishin's patched version of comint.el."
 (unless (boundp 'org-latex-packages-alist)
    (setq org-latex-packages-alist nil))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; org-export
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 使用xelatex一步生成PDF
-(require 'org-install)
-;;(require 'org-latex) no need for org8
-;;(require 'ox-latex)
-(require 'ox-bibtex) 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; c-article
-(setq org-latex-classes
-      '(("c-article"
-         "
-\\documentclass[12pt,a4paper]{article}
-\\usepackage[margin=2cm]{geometry}
-\\usepackage{fontspec}
-\\setromanfont{文泉驿微米黑}
-
-\\usepackage{etoolbox}  % Quote 部份的字型設定
-\\newfontfamily\\quotefont{文泉驿微米黑}
-\\AtBeginEnvironment{quote}{\\quotefont\\small}
-
-\\setmonofont[Scale=0.9]{Courier} % 等寬字型 [FIXME] Courier 中文會爛掉！
-\\font\\wqyHei=''宋体'' at 10pt
-\\font\\wqyHeiMono=''文泉驿等宽微米黑'' at 10pt
-\\font\\wqyHeiMicro=''文泉驿微米黑'' at 10pt
-\\XeTeXlinebreaklocale ``zh''
-\\XeTeXlinebreakskip = 0pt plus 1pt
-\\linespread{1.36}
-%
-%\\usepackage{biblatex}  %  for latex 
-%\\bibliography{\~/kuaipan/writing/zotero.bib}  % 
-%
-% [FIXME] ox-latex 的設計不良導致 hypersetup 必須在這裡插入
-\\usepackage{hyperref}
-\\hypersetup{
-  colorlinks=true, %把紅框框移掉改用字體顏色不同來顯示連結
-  linkcolor=[rgb]{0,0.37,0.53},
-  citecolor=[rgb]{0,0.47,0.68},
-  filecolor=[rgb]{0,0.37,0.53},
-  urlcolor=[rgb]{0,0.37,0.53},
-  pagebackref=true,
-  linktoc=all,}
-"
-         ("\\section{%s}" . "\\section*{%s}")
-         ("\\subsection{%s}" . "\\subsection*{%s}")
-         ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-         ("\\paragraph{%s}" . "\\paragraph*{%s}")
-         ("\\subparagraph{%s}" . "\\subparagraph*{%s}"))
-        ))
-;; [FIXME]
-;; 原本是不要讓 org 插入 hypersetup（因為 org-mode 這部份設計成沒辦法自訂，或許可以去 report 一下？）
-;; 改成自行插入，但這樣 pdfcreator 沒辦法根據 Emacs 版本插入，pdfkeyword 也會無效...幹。
-(setq org-latex-with-hyperref t)
-;; 把預設的 fontenc 拿掉
-;; 經過測試 XeLaTeX 輸出 PDF 時有 fontenc[T1]的話中文會無法顯示。
-;; hyperref 也拿掉，改從 classes 處就插入，原因見上面 org-latex-with-hyperref 的說明。
-(setq org-latex-default-packages-alist
-      '(("" "hyperref" nil)
-        ("AUTO" "inputenc" t)
-        ("" "fixltx2e" nil)
-        ("" "graphicx" t)
-        ("" "longtable" nil)
-        ("" "float" nil)
-        ("" "wrapfig" nil)
-        ("" "rotating" nil)
-        ("normalem" "ulem" t)
-        ("" "amsmath" t)
-        ("" "textcomp" t)
-        ("" "marvosym" t)
-        ("" "wasysym" t)
-        ("" "multicol" t)  ; 這是我另外加的，因為常需要多欄位文件版面。
-        ("" "amssymb" t)
-        "\\tolerance=1000"))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;class 2
-(add-to-list 'org-latex-classes
-             '("cn-article"
-               "\\documentclass[10pt,a4paper]{article}
-\\usepackage{graphicx}
-\\usepackage{xcolor}
-\\usepackage[top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}    % 控制页边距                             
-\\usepackage{xeCJK}
-\\usepackage{lmodern}
-\\usepackage{verbatim}
-\\usepackage{fixltx2e}
-\\usepackage{longtable}
-\\usepackage{float}
-\\usepackage{tikz}
-\\usepackage{wrapfig}
-\\usepackage{caption}
-\\usepackage{soul}
-\\usepackage{textcomp}
-\\usepackage{listings}
-\\usepackage{algorithm}
-\\usepackage{algorithmic}
-\\usepackage{marvosym}
-\\usepackage{wasysym}
-\\usepackage{latexsym}
-%\\usepackage{natbib}
-\\usepackage{biblatex}
-\\usepackage{fancyhdr}
-\\usepackage[xetex,
-pdfstartview=FitH,
-colorlinks=true,
-bookmarks=true,
-bookmarksnumbered=true,
-bookmarksopen=true,
-citecolor=blue,
-anchorcolor=green,
-urlcolor=blue,
-CJKbookmarks=true,
-linkcolor=blue,
-menucolor=blue]{hyperref}
-%\\setmainfont[BoldFont=Adobe Heiti Std]{Adobe Song Std}  
-%\\setsansfont[BoldFont=Adobe Heiti Std]{AR PL UKai CN}  
-%\\setmonofont{Bitstream Vera Sans Mono}  
-%\\newcommand\\fontnamemono{AR PL UKai CN}%等宽字体
-%\\newfontinstance\\MONO{\\fontnamemono}
-%\\newcommand{\\mono}[1]{{\\MONO #1}}
-%\\setCJKmainfont[Scale=0.9]{Adobe Heiti Std}%中文字体
-%\\setCJKmonofont[Scale=0.9]{Adobe Heiti Std}
-\\setCJKmainfont[Scale=0.9]{文泉驿微米黑}%中文字体
-\\geometry{a4paper, textwidth=6.5in, textheight=10in,
-marginparsep=7pt, marginparwidth=.6in}
-\\definecolor{foreground}{RGB}{220,220,204}%浅灰
-\\definecolor{background}{RGB}{62,62,62}%浅黑
-\\definecolor{preprocess}{RGB}{250,187,249}%浅紫
-\\definecolor{var}{RGB}{239,224,174}%浅肉色
-\\definecolor{string}{RGB}{154,150,230}%浅紫色
-\\definecolor{type}{RGB}{225,225,116}%浅黄
-\\definecolor{function}{RGB}{140,206,211}%浅天蓝
-\\definecolor{keyword}{RGB}{239,224,174}%浅肉色
-\\definecolor{comment}{RGB}{180,98,4}%深褐色
-\\definecolor{doc}{RGB}{175,215,175}%浅铅绿
-\\definecolor{comdil}{RGB}{111,128,111}%深灰
-\\definecolor{constant}{RGB}{220,162,170}%粉红
-\\definecolor{buildin}{RGB}{127,159,127}%深铅绿
-%\\punctstyle{kaiming}
-\\title{}
-\\fancyfoot[C]{\\bfseries\\thepage}
-\\chead{\\MakeUppercase\\sectionmark}
-\\pagestyle{fancy}
-\\tolerance=1000
-[NO-DEFAULT-PACKAGES]
-[NO-PACKAGES]"
-("\\section{%s}" . "\\section*{%s}")
-("\\subsection{%s}" . "\\subsection*{%s}")
-("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-("\\paragraph{%s}" . "\\paragraph*{%s}")
-("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
 ;; 使用Listings宏包格式化源代码(只是把代码框用listing环境框起来，还需要额外的设置)
 (setq org-export-latex-listings t)
 ;; Make Org use ido-completing-read for most of its completing prompts.
 (setq org-completion-use-ido t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;class 2
-(add-to-list 'org-latex-classes
-             '("cn-simple"
-               "\\documentclass[10pt,a4paper]{article}
-\\usepackage{graphicx}
-\\usepackage{xcolor}
-\\usepackage[top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}    % 控制页边距                             
-\\usepackage{xeCJK}
-\\usepackage{lmodern}
-\\usepackage{verbatim}
-\\usepackage{fixltx2e}
-\\usepackage{longtable}
-\\usepackage[font=small,labelfont=bf]{caption}
-\\usepackage{float}
-\\usepackage{tikz}
-\\usepackage{wrapfig}
-\\usepackage{caption}
-\\usepackage{soul}
-\\usepackage{textcomp}
-\\usepackage{listings}
-\\usepackage{enumerate}
-\\usepackage{algorithm}
-\\usepackage{algorithmic}
-\\usepackage{marvosym}
-\\usepackage{wasysym}
-\\usepackage{latexsym}
-\\usepackage[sort&compress,numbers,comma,square]{natbib}
-%\\usepackage{url} 
-%\\usepackage{biblatex} % biblatex
-%\\addbibresource{$HOME/emacs/kuaipan/zotero} 
-%\\bibliographystyle{unsrtnat}
-\\usepackage{fancyhdr}
-\\usepackage[xetex,
-pdfstartview=FitH,
-colorlinks=true,
-bookmarks=true,
-bookmarksnumbered=true,
-bookmarksopen=true,
-citecolor=blue,
-anchorcolor=green,
-urlcolor=blue,
-CJKbookmarks=true,
-linkcolor=blue,
-menucolor=blue]{hyperref}
-\\setmainfont[Scale=1.4]{Times New Roman}%中文字体
-\\setCJKmainfont[Scale=1.4]{文泉驿微米黑}%中文字体
-\\linespread{2.0}  % 行间距
-\\geometry{a4paper, textwidth=6.5in, textheight=10in,
-marginparsep=7pt, marginparwidth=.6in}
-%\\newcommand*{\doi}[1]{\href{http://dx.doi.org/#1}{doi: #1}}
-\\punctstyle{kaiming}
-\\title{}
-\\fancyfoot[C]{\\bfseries\\thepage}
-%\\chead{\\MakeUppercase\\sectionmark}
-\\lhead{\\MakeUppercase}
-\\pagestyle{fancy}
-\\tolerance=1000
-[NO-DEFAULT-PACKAGES]
-[NO-PACKAGES]"
-("\\section{%s}" . "\\section*{%s}")
-("\\subsection{%s}" . "\\subsection*{%s}")
-("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-("\\paragraph{%s}" . "\\paragraph*{%s}")
-("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;class 3
-(add-to-list 'org-latex-classes
-             '("cn-usual"
-               "\\documentclass[10pt,a4paper]{article}
-\\usepackage{graphicx}
-\\usepackage{xcolor}
-\\usepackage[top=2.5cm, bottom=2.5cm, left=2cm, right=2cm]{geometry}    % 控制页边距                             
-\\usepackage{xeCJK}
-\\usepackage{lmodern}
-\\usepackage{verbatim}
-\\usepackage{fixltx2e}
-\\usepackage{longtable}
-\\usepackage[font=small,labelfont=bf]{caption}
-\\usepackage{float}
-\\usepackage{tikz}
-\\usepackage{wrapfig}
-\\usepackage{caption}
-\\usepackage{soul}
-\\usepackage{textcomp}
-\\usepackage{listings}
-\\usepackage{enumerate}
-\\usepackage{algorithm}
-\\usepackage{algorithmic}
-\\usepackage{marvosym}
-\\usepackage{wasysym}
-\\usepackage{latexsym}
-\\usepackage[sort&compress,numbers,comma,square]{natbib}
-%\\usepackage{url} 
-%\\usepackage{biblatex} % biblatex
-%\\addbibresource{$HOME/emacs/kuaipan/zotero} 
-%\\bibliographystyle{unsrtnat}
-\\usepackage{fancyhdr}
-\\usepackage[xetex,
-pdfstartview=FitH,
-colorlinks=true,
-bookmarks=true,
-bookmarksnumbered=true,
-bookmarksopen=true,
-citecolor=blue,
-anchorcolor=green,
-urlcolor=blue,
-CJKbookmarks=true,
-linkcolor=blue,
-menucolor=blue]{hyperref}
-\\setmainfont[Scale=1.4]{Times New Roman}%中文字体
-\\setCJKmainfont[Scale=1.2]{文泉驿微米黑}%中文字体
-\\linespread{1.5}  % 行间距
-\\geometry{a4paper, textwidth=6.5in, textheight=10in,
-marginparsep=7pt, marginparwidth=.6in}
-%\\newcommand*{\doi}[1]{\href{http://dx.doi.org/#1}{doi: #1}}
-\\punctstyle{kaiming}
-\\title{}
-\\fancyfoot[C]{\\bfseries\\thepage}
-%\\chead{\\MakeUppercase\\sectionmark}
-\\lhead{\\MakeUppercase}
-\\pagestyle{fancy}
-\\tolerance=1000
-[NO-DEFAULT-PACKAGES]
-[NO-PACKAGES]"
-("\\section{%s}" . "\\section*{%s}")
-("\\subsection{%s}" . "\\subsection*{%s}")
-("\\subsubsection{%s}" . "\\subsubsection*{%s}")
-("\\paragraph{%s}" . "\\paragraph*{%s}")
-("\\subparagraph{%s}" . "\\subparagraph*{%s}")))
-
-
-
-;; 使用Listings宏包格式化源代码(只是把代码框用listing环境框起来，还需要额外的设置)
-(setq org-export-latex-listings t)
-;; Make Org use ido-completing-read for most of its completing prompts.
-(setq org-completion-use-ido t)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; beamer
-;; 导出Beamer的设置
-;; allow for export=>beamer by placing #+LaTeX_CLASS: beamer in org files
-;;-----------------------------------------------------------------------------
-(add-to-list 'org-latex-classes
-             ;; beamer class, for presentations
-             '("beamer"
-               "\\documentclass[11pt,professionalfonts]{beamer}
-\\mode
-\\usetheme{{{{Warsaw}}}}
-%\\usecolortheme{{{{beamercolortheme}}}}
-\\beamertemplateballitem
-\\setbeameroption{show notes}
-\\usepackage{graphicx}
-\\usepackage{tikz}
-\\usepackage{xcolor}
-\\usepackage{xeCJK}
-\\usepackage{amsmath}
-\\usepackage{lmodern}
-\\usepackage{fontspec,xunicode,xltxtra}
-\\usepackage{polyglossia}
-\\setmainfont{Times New Roman}
-\\setCJKmainfont{DejaVu Sans YuanTi}
-\\setCJKmonofont{DejaVu Sans YuanTi Mono}
-\\usepackage{verbatim}
-\\usepackage{listings}
-\\institute{{{{beamerinstitute}}}}
-\\subject{{{{beamersubject}}}}"
-               ("\\section{%s}" . "\\section*{%s}")
-               ("\\begin{frame}[fragile]\\frametitle{%s}"
-                "\\end{frame}"
-                "\\begin{frame}[fragile]\\frametitle{%s}"
-                "\\end{frame}")))
 
 (setq ps-paper-type 'a4
       ps-font-size 16.0
       ps-print-header nil
       ps-landscape-mode nil)
 
-
-(load-file "~/syncthing/emacs/es_template/latex_sjtuthesis.lisp")
-(load-file "~/syncthing/emacs/es_template/latex_sjtuthesis_m.lisp")
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; kbd macro
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; window starup set 
-;; (global-set-key (kbd "C-c w 4") 'w4)
-;; (execute-kbd-macro (symbol-function 'w4)) 
-;; 分割窗口，建立五个shell
-(fset 'wt4
-   [?\C-x ?2 ?\C-x ?3 ?\M-3 ?\C-x ?3 ?\M-1 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?1 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?2 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?3 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?4 return ?\M-2 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?5 return ?\M-3 ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?h ?o ?m ?e ?- ?s ?h ?e ?l ?l return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?1 return])
-
-;;(fset 'wt4
-;;   [?\C-x ?2 ?\C-x ?3 ?\M-3 ?\C-x ?3 ?\M-1 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?1 return ?\M-2 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?2 return ?\M-3 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?3 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?4 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?5 return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?h ?o ?m ?e ?- ?s ?h ?e ?l ?l return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?1 return])
-
-;; 分割窗口，建立五个shell, 并自动远程登陆并命名
-;;(fset 'wd4
-;;   [?\C-x ?\C-f ?/ ?/ ?s ?s ?h ?: ?t ?1 ?: ?/ ?e ?x ?p ?o ?r ?t ?/ ?h ?o ?m ?e ?/ ?t ?s ?h ?i ?/ ?c ?x ?p ?_ ?t ?e ?s ?/ ?\C-j ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?r ?d ?1 return ?\C-x ?\C-f ?/ ?/ ?s ?s ?h ?: ?t ?3 ?: ?/ ?e ?x ?p ?o ?r ?t ?/ ?h ?o ?m ?e ?/ ?t ?s ?h ?i ?/ ?c ?x ?p ?_ ?t ?e ?s ?/ ?\C-j ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?r ?d ?3 return ?\C-x ?\C-f ?/ ?/ ?s ?s ?h ?: ?t ?4 ?: ?/ ?e ?x ?p ?o ?r ?t ?/ ?h ?o ?m ?e ?/ ?t ?s ?h ?i ?/ ?c ?x ?p ?_ ?t ?e ?s ?/ ?\C-j ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?r ?d ?4 return ?\C-x ?\C-f ?/ ?/ ?s ?s ?h ?: ?t ?5 ?: ?/ ?h ?o ?m ?e ?/ ?y ?i ?l ?e ?i ?z ?h ?a ?o ?/ ?t ?i ?n ?g ?s ?h ?i ?/ ?c ?x ?p ?_ ?t ?e ?s ?/ ?\C-j ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?r ?d ?5 return])
-
-(fset 'wd4
-   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([24 6 47 47 115 115 104 58 116 49 58 47 101 120 112 111 114 116 47 104 111 109 101 47 116 115 104 105 47 99 120 112 95 116 101 115 47 10 134217848 114 101 110 97 109 101 45 98 117 102 102 101 114 return 114 100 49 return 24 6 47 47 115 115 104 58 116 51 58 47 101 120 112 111 114 116 47 104 111 109 101 47 116 115 104 105 47 99 120 112 95 116 101 115 47 10 134217848 114 101 110 97 109 101 45 98 117 102 102 101 114 return 114 100 51 return 24 6 47 47 115 115 104 58 116 52 58 47 101 120 112 111 114 116 47 104 111 109 101 47 116 115 104 105 47 99 120 112 95 116 101 115 47 10 134217848 114 101 110 97 109 101 45 98 117 102 102 101 114 return 114 100 52 return 24 6 47 47 115 115 104 58 116 53 58 47 104 111 109 101 47 121 105 108 101 105 122 104 97 111 47 116 105 110 103 115 104 105 47 99 120 112 95 116 101 115 47 10 134217848 114 101 110 97 109 101 45 98 117 102 102 101 114 return 114 100 53 return] 0 "%d")) arg)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; multi term
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 通过设置multi-term-program变量
-;; 我们可以指定新建的terminal使用何种shell
-(setq multi-term-program "/bin/bash")
-;; Multi-shell默认的buffer的长度是2048行，这就是说buffer中只存放2048行的显示。
-;; 通过设置term-buffer-maximum-size成0把buffer长度改成没有上限
-;;(add-hook 'term-mode-hook
-;;          (lambda ()
-;;            (setq term-buffer-maximum-size 50000)))
-;;(setq term-buffer-maximum-size 0)
-;; Make sure yanking works:		
-;;(add-hook 'term-mode-hook (lambda ()
-;;                            (define-key term-raw-map (kbd "C-y") 'term-paste)
-;;			    ))
-
-;; ;; 在term run 条件下的快捷键绑定
-;;(defun expose-global-binding-in-term (binding)
-;;   (define-key term-raw-map binding 
-;;     (lookup-key (current-global-map) binding)))
-
-;;(expose-global-binding-in-term (kbd "C-a"))
-;;(expose-global-binding-in-term (kbd "C-k"))
-;;(expose-global-binding-in-term (kbd "C-l"))
-;;(expose-global-binding-in-term (kbd "M-f"))
-;;(expose-global-binding-in-term (kbd "M-d"))
-;;(expose-global-binding-in-term (kbd "C-w"))
-;;(expose-global-binding-in-term (kbd "C-c C-z"))
-
-
-(defadvice ansi-term (after advice-term-line-mode activate)
-  (term-line-mode))
-
-;;;Toggles term between line mode and char mode"
-(defun jnm/term-toggle-mode ()
-  "Toggles term between line mode and char mode"
-  (interactive)
-  (if (term-in-line-mode)
-      (term-char-mode)
-    (term-line-mode)))
-
-;;(define-key term-mode-map (kbd "C-c C-j") 'jnm/term-toggle-mode)
-;;(define-key term-mode-map (kbd "C-c C-k") 'jnm/term-toggle-mode)
-
-;;(define-key term-raw-map (kbd "C-c C-j") 'jnm/term-toggle-mode)
-;;(define-key term-raw-map (kbd "C-c C-k") 'jnm/term-toggle-mode)
-
-
-;; ;; 在 char run 条件下的快捷键绑定
-;; (eval-after-load "term"
-;;   '(progn
-
-;;      (define-key term-raw-map (kbd "M-J") 'windmove-left)
-;;      (define-key term-raw-map (kbd "C-a") 'move-beginning-of-line)
-;;      (define-key term-raw-map (kbd "C-k") 'kill-line)
-;;      ))
-;; (define-key term-raw-map [(control ?a)] 'term-send-raw-meta)
-;; (define-key term-raw-map [(control ?k)] 'term-send-raw-meta)
-;; (define-key term-raw-map [(meta ?p)] 'term-send-raw-meta)
-;; (define-key term-raw-map [(meta ?n)] 'term-send-raw-meta)
-;; the key map for line mode is term-mode-map
+(load-file "~/syncthing/emacs/es_template/latex_thesis.lisp")
+(load-file "~/syncthing/emacs/es_template/latex_general.lisp")
 
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;python
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; using python-mode.el
-;; (autoload 'python-mode "python-mode.el" "Python mode." t)
-;; (setq auto-mode-alist (append '(("/.*\.py\'" . python-mode)) auto-mode-alist))
-;; (add-to-list 'interpreter-mode-alist '("python" . python-mode))
-
-(when (executable-find "ipython")
-   (setq python-shell-interpreter "ipython"))
-
-;; 更改键
-(eval-after-load "python"
-   '(define-key python-mode-map (kbd "<C-return>") 'python-shell-send-region))
-;; ;; (setq
-;; ;;  python-shell-interpreter "ipython"
-;; ;;  python-shell-interpreter-args ""
-;; ;;  python-shell-prompt-regexp "In \\[[0-9]+\\]: "
-;; ;;  python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: "
-;; ;;  python-shell-completion-setup-code
-;; ;;  "from IPython.core.completerlib import module_completion"
-;; ;;  python-shell-completion-module-string-code
-;; ;;  "';'.join(module_completion('''%s'''))\n"
-;; ;;  python-shell-completion-string-code
-;; ;;  "';'.join(get_ipython().Completer.all_completions('''%s'''))\n")
-
-;;;; PYTHON-MODE configuration
-(eval-after-load "python-mode"
-  '(define-key python-mode-map (kbd "C-c C-p") 'py-execute-region))
-(eval-after-load "python-mode"
-  '(define-key python-mode-map (kbd "<C-return>") 'py-execute-line))
-
-;; ;; 默认
-;; (setq py-force-py-shell-name-p t)
-;; (setq-default py-shell-name "/usr/bin/ipython2")
-;; (setq py-split-window-on-execute nil)
-;; (setq py-shell-name "/usr/bin/python2")
-
-;; ;; using elpy no working
-;; (setq elpy-rpc-python-command "ipython")
-
-(elpy-enable)
-;; (elpy-use-ipython)
-
-(defvar myPackages
-  '(better-defaults
-    ein
-    elpy
-    flycheck
-    material-theme
-    py-autopep8))
-
-;; use flycheck not flymake with elpy
-(when (require 'flycheck nil t)
-  (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
-  (add-hook 'elpy-mode-hook 'flycheck-mode))
-
-;; enable autopep8 formatting on save
-(require 'py-autopep8)
-(add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-
-;; (setq py-force-py-shell-name-p t)
-;; (setq-default py-shell-name "/usr/bin/ipython2")
-
-(setq python-shell-interpreter "python2"
-      python-shell-interpreter-args "-i")
-
-;; (setq python-command "ipython2") 
-;; (setq 
-;;  python-shell-interpreter "ipython2" 
-;;  python-shell-interpreter-args "" 
-;;  ;; python-shell-prompt-regexp "In \\[[0-9]+\\]: " 
-;;  ;; python-shell-prompt-output-regexp "Out\\[[0-9]+\\]: " 
-;;  ;; python-shell-completion-setup-code "from IPython.core.completerlib import module_completion" 
-;;  ;; python-shell-completion-string-code "';'.join(__IP.complete('''%s'''p))\n" 
-;;  python-shell-completion-module-string-code "" ) 
-;; ( add-hook 'python-mode-hook
-;; 	   ( lambda ()
-;; 	     ( set-variable 'indent-tabs-mode nil )
-;; 	     ( define-key python-mode-map ( kbd "RET" ) 'newline-and-indent ) ) )
-
-
-;; ;; ansi-color in ipython no working?
-(setq py-python-command-args '("--colors=linux"))
-
-;; flymake
-
-(when (load "flymake" t)
-  (defun flymake-pyflakes-init ()
-    (let* ((temp-file (flymake-init-create-temp-buffer-copy
-		       'flymake-create-temp-inplace))
-           (local-file (file-relative-name
-			temp-file
-			(file-name-directory buffer-file-name))))
-      (list "pycheckers"  (list local-file))))
-  (add-to-list 'flymake-allowed-file-name-masks
-	       '("\\.py\\'" flymake-pyflakes-init)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; ibuffer
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; group ibuffer
-(setq ibuffer-saved-filter-groups
-      (quote (("default"
-	       ("dired" (mode . dired-mode))
-	       ("perl" (mode . cperl-mode))
-	       ("erc" (mode . erc-mode))
-	       ("planner" (or
-			   (name . "^\\*Calendar\\*$")
-			   (name . "^diary$")
-			   (mode . muse-mode)))
-	       ("emacs" (or
-			 (name . "^\\*scratch\\*$")
-			 (name . "^\\*Messages\\*$")))
-	       ("gnus" (or
-			(mode . message-mode)
-			(mode . bbdb-mode)
-			(mode . mail-mode)
-			(mode . gnus-group-mode)
-			(mode . gnus-summary-mode)
-			(mode . gnus-article-mode)
-			(name . "^\\.bbdb$")
-			(name . "^\\.newsrc-dribble")))))))
-
-(add-hook 'ibuffer-mode-hook
-	  (lambda ()
-	    (ibuffer-switch-to-saved-filter-groups "default")))
-
-
-;; setup files ending in “.org.txt” to open in js2-mode
-(add-to-list 'auto-mode-alist '("\\.org.txt\\'" . org-mode))
-;; ;; remove any file name suffix associated with js-mode
-;; (setq auto-mode-alist (rassq-delete-all 'js-mode auto-mode-alist))
-;; ;; if first line of file matches, activate nxml-mode
-;; (add-to-list 'magic-mode-alist '("<!DOCTYPE html .+DTD XHTML .+>" . nxml-mode) )
-
-;; ansi-color
-(require 'ansi-color)
-(defun display-ansi-colors ()
-  (interactive)
-  (ansi-color-apply-on-region (point-min) (point-max)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;reference
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; using org-ref
-;; (setq org-ref-bibliography-notes "~/Dropbox/bibliography/notes.org"
-;;       org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
-;;       org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
-;; (setq bibtex-completion-bibliography "~/Dropbox/bibliography/references.bib"
-;;       bibtex-completion-library-path "~/Dropbox/bibliography/bibtex-pdfs"
-;;       bibtex-completion-notes-path "~/Dropbox/bibliography/helm-bibtex-notes")
+;;;;;; ==================================== org-ref cfg ====================================
+;;
 (setq bibtex-completion-bibliography "~/syncthing/emacs/zotero.bib"
       bibtex-completion-library-path "~/syncthing/emacs/zotero.bib")
 (setq org-ref-default-bibliography '("~/syncthing/emacs/zotero.bib")
@@ -1373,18 +937,10 @@ marginparsep=7pt, marginparwidth=.6in}
 (require 'org-ref-citeproc)
 ;; (add-hook 'org-export-before-parsing-hook 'orcp-citeproc)
 
-;; add hook when 
-;; (add-to-list 'load-path ".")
-;; (require 'org-ref-citeproc)
-;; (when (file-exists-p "readme.html") (delete-file "readme.html"))
-;; (let ((org-export-before-parsing-hook '(orcp-citeproc)))
-;;   (browse-url (org-html-export-to-html)))
 
-;; (add-hook 'org-export-before-parsing-hook 'orcp-citeproc)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;; reftex 文献
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;; ==================================== reftex cfg ====================================
+;;
 (setq reftex-default-bibliography
       (quote
        ("default.bib" "~/syncthing/emacs/zotero.bib"))) 
@@ -1393,96 +949,15 @@ marginparsep=7pt, marginparwidth=.6in}
 
 (add-hook 'org-mode-hook
 	  (lambda ()
-	    ;; for promoting and demoting headings
-	    ;; (define-key org-mode-map (kbd "C-S-f") 'org-metaright)
-	    ;; (define-key org-mode-map (kbd "C-S-b") 'org-metaleft)
-	    
-	    ;; (define-key org-mode-map (kbd "M-T") 'org-metadown)
-	    ;; (define-key org-mode-map (kbd "M-N") 'org-metaup)
-
-	    ;; demoting and demoting a heading and its subtrees
-	    ;; (define-key org-mode-map (kbd "M-B") 'org-shiftmetaleft)
-	    ;; (define-key org-mode-map (kbd "M-F") 'org-shiftmetaright)
-	    ;; (define-key org-mode-map (kbd "C-S-t") 'org-shiftup)
-
-	    ;; (define-key org-mode-map (kbd "C-c p") nil)  ; it was orgtbl-ascii-plot
-	    
-	    ;; (define-key org-mode-map (kbd "C-c t") 'org-shifttab)
-	    ;; (define-key org-mode-map (kbd "C-c SPC") nil)
-	    ;; (define-key org-mode-map (kbd "M-h") nil)
 	    (define-key org-mode-map (kbd "C-c (") 'reftex-citation)
 	    (define-key org-mode-map (kbd "C-c )") 'org-ref-helm-insert-cite-link)
 	    (define-key org-mode-map (kbd "C-c 0") 'org-ref-helm-insert-cite-link)
-
-	    ;; (define-key org-mode-map (kbd "C-x p") nil)
-
-	    ;; (Define-key org-mode-map (kbd "C-c C-j") 'org-insert-todo-heading-respect-content)
 	    )
 	  )
 
-;; reftex formats 
-;; makes same as org-ref
+;; reftex formats, makes same as org-ref
 (setq reftex-cite-format "cite:%l")
 (reftex-mode t)
 
-;;;; helm-bibtex
-;; (setq bibtex-completion-format-citation-functions
-;;   '((org-mode      . bibtex-completion-format-citation-cite)
-;;     (latex-mode    . bibtex-completion-format-citation-cite)
-;;     (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
-;;     (default       . bibtex-completion-format-citation-default)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;helm
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(require 'helm)
-(require 'helm-config)
-
-;; (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
-(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
-(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
-
-(helm-mode 1)
-
-;; using ido elsewhere
-(add-to-list 'helm-completing-read-handlers-alist '(execute-extended-command . ido))
-(add-to-list 'helm-completing-read-handlers-alist '(find-files . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(describe-function . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(describe-variable . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(describe-symbol . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(debug-on-entry . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(find-function . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(disassemble . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(trace-function . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(trace-function-foreground . ido))
-;; (add-to-list 'helm-completing-read-handlers-alist '(trace-function-background . ido))
-(add-to-list 'helm-completing-read-handlers-alist '(find-tag . helm-completing-read-default-find-tag))
-(add-to-list 'helm-completing-read-handlers-alist '(org-capture . helm-org-completing-read-tags))
-(add-to-list 'helm-completing-read-handlers-alist '(org-set-tags . helm-org-completing-read-tags))
-
-
-;; greek
-;; (global-unset-key (kbd "C-x 8 P"))
-
-(global-set-key (kbd "C-x 8 a") "α")
-(global-set-key (kbd "C-x 8 b") "β")
-(global-set-key (kbd "C-x 8 d") "δ")
-(global-set-key (kbd "C-x 8 e") "ε")
-(global-set-key (kbd "C-x 8 w") "ψ")
-
-(global-set-key (kbd "C-x 8 D") "Δ")
-(global-set-key (kbd "C-x 8 W") "Ψ")
-
-;; add local bashrc
-(defun set-exec-path-from-shell-PATH ()
-  (let ((path-from-shell (replace-regexp-in-string
-                          "[ \t\n]*$"
-                          ""
-                          (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
-    (setenv "PATH" path-from-shell)
-    (setq eshell-path-env path-from-shell) ; for eshell users
-    (setq exec-path (split-string path-from-shell path-separator))))
-
-(when window-system (set-exec-path-from-shell-PATH))
 
 
