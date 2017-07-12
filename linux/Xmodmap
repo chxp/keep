@@ -1,0 +1,53 @@
+! output taken from:
+! xmodmap -pke | egrep '(Control|Super|Alt|Menu)'
+! Use to set keycodes correctly below. List reordered to match
+! keys from left to right.
+
+! keycode  37 = Control_L NoSymbol Control_L
+! keycode  64 = Alt_L Meta_L Alt_L Meta_L
+! keycode  66 = Caps_Lock NoSymbol Caps_Lock
+! keycode 105 = Control_R NoSymbol Control_R
+! keycode 108 = Alt_R Meta_R Alt_R Meta_R
+! keycode 133 = Super_L NoSymbol Super_L
+! keycode 134 = Super_R NoSymbol Super_R
+! keycode 135 = Menu NoSymbol Menu
+! keycode 147 = XF86MenuKB NoSymbol XF86MenuKB
+! keycode 204 = NoSymbol Alt_L NoSymbol Alt_L
+! keycode 206 = NoSymbol Super_L NoSymbol Super_L
+
+
+! First clear all modifiers, caps lock & control
+clear lock
+clear control
+clear mod1
+clear mod4
+
+! use xmodmap -pm
+! shift       Shift_L (0x32),  Shift_R (0x3e)
+! lock        Caps_Lock (0x42)
+! control     Control_L (0x25),  Control_R (0x69)
+! mod1        Alt_L (0x40),  Alt_R (0x6c),  Meta_L (0xcd)
+! mod2        Num_Lock (0x4d)
+! mod3      
+! mod4        Super_L (0x85),  Super_R (0x86),  Super_L (0xce),  Hyper_L (0xcf)
+! mod5        ISO_Level3_Shift (0x5c),  Mode_switch (0xcb)
+
+keycode  37 = Caps_Lock NoSymbol
+keycode  64 = Control_L NoSymbol
+keycode  66 = Alt_L Meta_L Alt_L Meta_L
+keycode 105 = Control_R NoSymbol Control_R
+keycode 108 = Control_R NoSymbol Control_R
+keycode 133 = Control_L NoSymbol Control_L
+keycode 134 = Super_R NoSymbol Super_R
+keycode 135 = Alt_L Meta_L Alt_L Meta_L
+! keycode 147 = XF86MenuKB NoSymbol XF86MenuKB
+! keycode 204 = NoSymbol Alt_L NoSymbol Alt_L
+! keycode 206 = NoSymbol Super_L NoSymbol Super_L
+
+
+! We need to set keycodes first, as some programs (emacs!) read
+! the key names and seem to ignore what's below.
+add mod1    = Alt_R Alt_L Meta_R Meta_L
+add mod4    = Super_R Super_L Menu
+add control = Control_R Control_L
+add lock    = Caps_Lock 
