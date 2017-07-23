@@ -1,0 +1,830 @@
+
+* package related 
+** el-get
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'load-path "~/.emacs.d/mine")
+     (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
+
+     (unless (require 'el-get nil 'noerror)
+       (require 'package)
+       (add-to-list 'package-archives
+		    '("melpa" . "http://melpa.org/packages/"))
+       (package-refresh-contents)
+       (package-initialize)
+       (package-install 'el-get)
+       (require 'el-get))
+
+     (el-get 'sync)
+   #+END_SRC
+
+** elpa
+   #+BEGIN_SRC emacs-lisp
+     (add-to-list 'load-path "~/.emacs.d/elpa")
+
+     (require 'package)
+     (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/") t)
+     (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/") t)
+     (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+     (package-initialize)
+   #+END_SRC
+
+* base cfg
+** usr setting
+   #+BEGIN_SRC emacs-lisp
+     (defalias 'qrr 'query-replace-regexp)
+     (setq default-directory "~/")
+   #+END_SRC
+
+** 括号匹配
+   #+BEGIN_SRC emacs-lisp
+     ;;打开括号匹配显示模式
+     (setq show-paren-mode t) 
+     (setq show-paren-style 'parenthesis) ;;括号匹配时可以高亮显示另外一边的括号，但光标不会烦人的跳到另一个括号处
+
+     ;;括号匹配,找到对应的括号
+     (global-set-key "%" 'match-paren)          
+     (defun match-paren (arg)
+       "Go to the matching paren if on a paren; otherwise insert %."
+       (interactive "p")
+       (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1))
+	     ((looking-at "\\s\)") (forward-char 1) (backward-list 1))
+	     (t (self-insert-command (or arg 1)))))
+   #+END_SRC
+
+** other
+   #+BEGIN_SRC emacs-lisp
+     (tool-bar-mode -1)
+     (menu-bar-mode -1)
+     ;; 允许外部粘贴
+     (setq x-select-enable-clipboard t)
+     ;; 光标靠近鼠标指针时，让鼠标指针自动让开, 特好玩
+     (mouse-avoidance-mode 'animate)
+     ;; 使用鼠标中键可以粘贴
+     (setq mouse-yank-at-point t)
+     ;;指针不要闪，我得眼睛花了
+     (blink-cursor-mode -1)
+
+     ;; auto image
+     (setq auto-image-file-mode t) 
+
+     ;;自动折行
+     (setq-default truncate-lines t)
+
+     ;;关闭emacs启动时的画面
+     (setq inhibit-startup-message t)
+
+     ;;去掉滚动条
+     (set-scroll-bar-mode nil)
+
+     ;; 改变 Emacs 固执的要你回答 yes 的行为。按 y 或空格键表示 yes，n 表示 no。
+     (fset 'yes-or-no-p 'y-or-n-p)
+
+     (global-font-lock-mode   t)
+
+     (setq-default line-spacing 2)
+
+   #+END_SRC
+
+* ibuffer dired
+** ibuffer
+   #+BEGIN_SRC emacs-lisp
+     (require 'ibuffer)  
+     (global-set-key (kbd "C-x C-b") 'ibuffer)  
+
+     ;; Use human readable Size column instead of original one　from purcell
+     (define-ibuffer-column size-h
+       (:name "Size" :inline t)
+       (cond
+	((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
+	((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
+	(t (format "%8d" (buffer-size)))))
+
+
+     ;; group ibuffer
+     (setq ibuffer-saved-filter-groups
+	   (quote (("default"
+		    ("dired" (mode . dired-mode))
+		    ("perl" (mode . cperl-mode))
+		    ("python" (mode . python-mode))
+		    ;; ("erc" (mode . erc-mode))
+		    ("helm" (mode . helm-mode))
+		    ;; ("planner" (or
+		    ;; 		   (name . "^\\*Calendar\\*$")
+		    ;; 		   (name . "^diary$")
+		    ;; 		   (mode . muse-mode)))
+		    ("emacs" (or
+			      (name . "^\\*scratch\\*$")
+			      (name . "^\\*Messages\\*$")))
+		    ("gnus" (or
+			     (mode . message-mode)
+			     (mode . bbdb-mode)
+			     (mode . mail-mode)
+			     (mode . gnus-group-mode)
+			     (mode . gnus-summary-mode)
+			     (mode . gnus-article-mode)
+			     (name . "^\\.bbdb$")
+			     (name . "^\\.newsrc-dribble")))))))
+
+     (add-hook 'ibuffer-mode-hook
+	       (lambda ()
+		 (ibuffer-switch-to-saved-filter-groups "default")))
+   #+END_SRC
+** ansi-color
+   #+BEGIN_SRC emacs-lisp
+     (require 'ansi-color)
+     (defun display-ansi-colors ()
+       (interactive)
+       (ansi-color-apply-on-region (point-min) (point-max)))
+   #+END_SRC
+
+** dired general
+  #+BEGIN_SRC emacs-lisp
+    (define-key global-map (kbd "C-x C-j") 'dired-jump)
+    (define-key global-map (kbd "C-x 4 C-j") 'dired-jump-other-window)
+    (put 'dired-find-alternate-file 'disabled t)
+
+    ;; ;;;; 
+    ;; (require 'dired+)
+    ;; ;; (require 'dired-sort)
+
+    ;;;; human readable file size, from purcell
+    (setq dired-listing-switches "-alh")
+    (setq directory-free-space-args "-Pm")
+     (defun ls-lisp-format-file-size (file-size human-readable)
+       (if (or (not human-readable)
+	       (< file-size 1024))
+	   (format (if (floatp file-size) " %11.0f" " %11d") file-size)
+	 (do ((file-size (/ file-size 1024.0) (/ file-size 1024.0))
+	      ;; kilo, mega, giga, tera, peta, exa
+	      (post-fixes (list "k" "M" "G" "T" "P" "E") (cdr post-fixes)))
+	     ((< file-size 1024) (format " %10.0f%s"  file-size (car post-fixes))))))
+  #+END_SRC
+
+** dired git
+   #+BEGIN_SRC emacs-lisp
+     ;; ;; gutter
+     ;; (global-git-gutter+-mode)
+     ;; git-gutter
+     (global-git-gutter-mode 1)
+
+     ;; dire-k
+     (require 'dired-k)
+     (add-hook 'dired-initial-position-hook 'dired-k)
+     ;; use dired-k alternative to revert-buffer
+     (define-key dired-mode-map (kbd "g") 'dired-k)
+   #+END_SRC
+
+* Window frame related 
+** window
+   #+BEGIN_SRC emacs-lisp
+     ;; 四窗口
+     (require 'window-numbering)
+     (window-numbering-mode 1)
+
+     (winner-mode 1)
+     ;; copied from http://puntoblogspot.blogspot.com/2011/05/undo-layouts-in-emacs.html
+     (global-set-key (kbd "C-x 4 u") 'winner-undo)
+     (global-set-key (kbd "C-x 4 r") 'winner-redo)
+
+     ;; 三窗口设置
+     (defun change-split-type (split-fn &optional arg)
+       "Change 3 window style from horizontal to vertical and vice-versa"
+       (let ((bufList (mapcar 'window-buffer (window-list))))
+	 (select-window (get-largest-window))
+	 (funcall split-fn arg)
+	 (mapcar* 'set-window-buffer (window-list) bufList)))
+
+     (defun change-split-type-3-v (&optional arg)
+       "change 3 window style from horizon to vertical"
+       (interactive "P")
+       (change-split-type 'split-window-3-horizontally arg))
+
+     (defun change-split-type-3-h (&optional arg)
+       "change 3 window style from vertical to horizon"
+       (interactive "P")
+       (change-split-type 'split-window-3-vertically arg))
+
+     (defun split-window-3-horizontally (&optional arg)
+       "Split window into 3 while largest one is in horizon"
+       (delete-other-windows)
+       (split-window-horizontally)
+       (if arg (other-window 1))
+       (split-window-vertically))
+
+     (defun split-window-3-vertically (&optional arg)
+       "Split window into 3 while largest one is in vertical"
+       (delete-other-windows)
+       (split-window-vertically)
+       (if arg (other-window 1))
+       (split-window-horizontally))
+
+     ;;; 键的绑定
+     (global-set-key (kbd "C-x 9 v") 'change-split-type-3-v)
+     (global-set-key (kbd "C-x 9 h") 'change-split-type-3-h)
+
+     ;;; full screen
+     (global-set-key [f11] 'my-fullscreen)
+
+     (defun my-fullscreen ()
+       (interactive)
+       (x-send-client-message
+	nil 0 nil "_NET_WM_STATE" 32
+	'(2 "_NET_WM_STATE_FULLSCREEN" 0))
+       )
+
+     ;;该函数用于最大化,状态值为1说明最大化后不会被还原
+     ;;因为这里有两次最大化 (分别是水平和垂直)
+     (defun my-maximized ()
+       (interactive)
+       (x-send-client-message
+	nil 0 nil "_NET_WM_STATE" 32
+	'(1 "_NET_WM_STATE_MAXIMIZED_HORZ" 0))
+       (interactive)
+       (x-send-client-message
+	nil 0 nil "_NET_WM_STATE" 32
+	'(1 "_NET_WM_STATE_MAXIMIZED_VERT" 0)))
+     (my-maximized) 
+   #+END_SRC
+
+** split window
+   #+BEGIN_SRC emacs-lisp
+     (fset 'wt4
+	[?\C-x ?2 ?\C-x ?3 ?\M-3 ?\C-x ?3 ?\M-1 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?1 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?2 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?3 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?4 return ?\M-2 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?5 return ?\M-3 ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?h ?o ?m ?e ?- ?s ?h ?e ?l ?l return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?1 return])
+   #+END_SRC
+
+** theme
+  #+BEGIN_SRC emacs-lisp
+    (require 'color-theme)
+    (color-theme-calm-forest)
+    ;; ;;(color-theme-euphoria)
+    ;; ;;(color-theme-dark-green)
+    ;; ;;(color-theme-deep-blue-2)
+    ;; ;;(color-theme-lethe)
+    ;; ;;(color-theme-matrix)
+    ;; ;;(color-theme-hober)
+    ;; ;;(color-theme-taming-mr-arneson)
+    ;; ;;(color-theme-oswald)
+    ;; ;;(color-theme-tty-dark)
+    ;; ;;(color-theme-taylor)
+    ;; ;;(color-theme-vim-color)
+    ;; ;;(color-theme-wheat)
+    ;; (require 'color-theme-sanityinc-tomorrow)
+    ;; (color-theme-sanityinc-tomorrow--define-theme night)
+  #+END_SRC
+
+** font
+  #+BEGIN_SRC emacs-lisp
+    ;;; Setting English Font
+    (set-face-attribute
+      'default nil :font "Consolas 13")
+    ;; Chinese Font
+    (dolist (charset '(kana han symbol cjk-misc bopomofo))
+	(set-fontset-font (frame-parameter nil 'font)
+			  charset
+			  (font-spec :family "WenQuanyi Micro Hei Mono" :size 18)))
+
+    ;{"Dejavu Sans Mono 10" 与 "WenQuanyi Micro Hei Mono 16"}
+    ;{"Dejavu Sans Mono 11" 与 "WenQuanyi Micro Hei Mono 18"}
+    ;{"Consolas 11" 与 "Microsoft Yahei 16"}
+    ;{"Consolas 13" 与 "WenQuanyi Micro Hei Mono 18"}
+    ;{"Liberation Mono 12" 与 "WenQuanYi Micro Hei Mono 20"}
+    ;{"Liberation Mono 11" 与 "WenQuanYi Micro Hei Mono 18"}
+    ;{"monaco 11" 与 "WenQuanYi Micro Hei Mono 18"}
+    ;{"monaco 11" 与 "Microsoft Yahei 15"}
+    ;"inconsolata 13"and  "WenQuanYi Micro Hei Mono" :size 18
+  #+END_SRC
+
+** coding
+  #+BEGIN_SRC emacs-lisp
+    ;; set the default text coding system
+    (setq default-buffer-file-coding-system 'utf-8)
+    (prefer-coding-system 'utf-8)
+
+    ;;system-time-format
+    (setq system-time-locale "C")
+
+    ;; enforce utf-8 as the default coding system
+    (prefer-coding-system 'utf-8)
+    (set-default-coding-systems 'utf-8)
+    (set-terminal-coding-system 'utf-8)
+    (set-keyboard-coding-system 'utf-8)
+    ;; backwards compatibility as default-buffer-file-coding-system
+    ;; is deprecated in 23.2.
+    (if (boundp 'buffer-file-coding-system)
+	(setq-default buffer-file-coding-system 'utf-8)
+      (setq default-buffer-file-coding-system 'utf-8))
+    ;; Treat clipboard input as UTF-8 string first; compound text next, etc.
+    (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))
+  #+END_SRC
+
+* completion related 
+** helm
+   #+BEGIN_SRC emacs-lisp
+     (require 'helm)
+     (require 'helm-config)
+
+     (global-set-key (kbd "M-x") 'helm-M-x)
+     ;; (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+     (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+     (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+     (helm-mode 1)
+
+     ;; using ido elsewhere
+     (add-to-list 'helm-completing-read-handlers-alist '(execute-extended-command . ido))
+     (add-to-list 'helm-completing-read-handlers-alist '(find-files . ido))
+   #+END_SRC
+
+** ido
+   #+BEGIN_SRC emacs-lisp
+     (require 'ido)
+     (ido-mode t)
+
+     ;; from purcell
+     ;; ido everwhere conflict with helm
+     ;; (ido-everywhere t)
+     (setq ido-enable-flex-matching t)
+     (setq ido-use-filename-at-point nil)
+     (setq ido-auto-merge-work-directories-length 0)
+     (setq ido-use-virtual-buffers t)
+     ;; Use smex to handle M-x
+     ;; Change path for ~/.smex-items
+     (setq smex-save-file (expand-file-name ".smex-items" user-emacs-directory))
+     (global-set-key [remap execute-extended-command] 'smex)
+     (require 'idomenu)
+     ;; Allow the same buffer to be open in different frames
+     (setq ido-default-buffer-method 'selected-window)
+     ;; http://www.reddit.com/r/emacs/comments/21a4p9/use_recentf_and_ido_together/cgbprem
+     (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+   #+END_SRC
+
+** recentf
+   #+BEGIN_SRC emacs-lisp
+     (recentf-mode 1)
+     (setq recentf-max-saved-items 1000
+	   recentf-exclude '("/tmp/" "/ssh:"))
+   #+END_SRC
+
+* tramp
+  #+BEGIN_SRC emacs-lisp
+    (require 'tramp)
+    (setq tramp-default-method "scp")
+
+    (defun make-comint-directory-tracking-work-remotely ()
+      "Add this to comint-mode-hook to make directory tracking work
+    while sshed into a remote host, e.g. for remote shell buffers
+    started in tramp. (This is a bug fix backported from Emacs 24:
+    http://comments.gmane.org/gmane.emacs.bugs/39082"
+      (set (make-local-variable 'comint-file-name-prefix)
+	   (or (file-remote-p default-directory) "")))
+    (add-hook 'comint-mode-hook 'make-comint-directory-tracking-work-remotely)
+
+
+    ;; automatically close completions frame buffer in Emacs shell (comint) mode
+    (defun comint-close-completions ()
+      "Close the comint completions buffer.
+    Used in advice to various comint functions to automatically close
+    the completions buffer as soon as I'm done with it. Based on
+    Dmitriy Igrishin's patched version of comint.el."
+      (if comint-dynamic-list-completions-config
+	  (progn
+	    (set-window-configuration comint-dynamic-list-completions-config)
+	    (setq comint-dynamic-list-completions-config nil))))
+
+    (defadvice comint-send-input (after close-completions activate)
+      (comint-close-completions))
+
+    (defadvice comint-dynamic-complete-as-filename (after close-completions activate)
+      (if ad-return-value (comint-close-completions)))
+
+    (defadvice comint-dynamic-simple-complete (after close-completions activate)
+      (if (member ad-return-value '('sole 'shortest 'partial))
+	  (comint-close-completions)))
+
+    (defadvice comint-dynamic-list-completions (after close-completions activate)
+	(comint-close-completions)
+	(if (not unread-command-events)
+	    ;; comint's "Type space to flush" swallows space. put it back in.
+	    (setq unread-command-events (listify-key-sequence " "))))
+
+     (add-hook 'comint-mode-hook (lambda () (set (make-local-variable 'comint-file-name-prefix) (or (file-remote-p default-directory) ""))))
+
+    (when (memq window-system '(mac ns))
+      (exec-path-from-shell-initialize))
+  #+END_SRC
+
+* language related
+** paredit
+   #+BEGIN_SRC emacs-lisp
+     ;; from Purcell
+     (require 'paredit)
+     (autoload 'enable-paredit-mode "paredit")
+     (defun maybe-map-paredit-newline ()
+       (unless (or (memq major-mode '(inferior-emacs-lisp-mode cider-repl-mode))
+		   (minibufferp))
+	 (local-set-key (kbd "RET") 'paredit-newline)))
+     (add-hook 'paredit-mode-hook 'maybe-map-paredit-newline)
+
+     ;;(diminish 'paredit-mode " Par")
+     (dolist (binding (list (kbd "C-<left>") (kbd "C-<right>")
+			    (kbd "C-M-<left>") (kbd "C-M-<right>")))
+       (define-key paredit-mode-map binding nil))
+     ;; Disable kill-sentence, which is easily confused with the kill-sexp
+     ;; binding, but doesn't preserve sexp structure
+     (define-key paredit-mode-map [remap kill-sentence] nil)
+     (define-key paredit-mode-map [remap backward-kill-sentence] nil)
+     ;; Allow my global binding of M-? to work when paredit is active
+     (define-key paredit-mode-map (kbd "M-?") nil)
+
+     ;; Compatibility with other modes
+     ;; (suspend-mode-during-cua-rect-selection 'paredit-mode)
+     ;; Use paredit in the minibuffer
+     ;; TODO: break out into separate package
+     ;; http://emacsredux.com/blog/2013/04/18/evaluate-emacs-lisp-in-the-minibuffer/
+     (add-hook 'minibuffer-setup-hook 'conditionally-enable-paredit-mode)
+     (defvar paredit-minibuffer-commands '(eval-expression
+					   pp-eval-expression
+					   eval-expression-with-eldoc
+					   ibuffer-do-eval
+					   ibuffer-do-view-and-eval)
+       "Interactive commands for which paredit should be enabled in the minibuffer.")
+     (defun conditionally-enable-paredit-mode ()
+       "Enable paredit during lisp-related minibuffer commands."
+       (if (memq this-command paredit-minibuffer-commands)
+	   (enable-paredit-mode)))
+   #+END_SRC
+
+** c
+   #+BEGIN_SRC emacs-lisp
+     ;;设置C语言编译命令
+     (set 'compile-command' "gcc -g -Wall")
+
+     ;;定义f9为编译命令
+     (global-set-key [f9] 'compile) 
+
+     ;;显示行列号
+     (setq column-number-mode t)
+     (setq line-number-mode t)
+
+     ;;把c语言风格设置为k&r风格
+     (add-hook 'c-mode-hook
+	       '(lambda ()
+		  (c-set-style "k&r")))
+
+     ;;把C++语言风格设置为stroustrup风格
+     (add-hook 'c++-mode-hook
+	       '(lambda()
+		  (c-set-style "stroustrup")))
+   #+END_SRC
+
+** R
+   #+BEGIN_SRC emacs-lisp
+     ;; ESS
+     (setq  ess-tab-complete-in-script t)
+
+     ;; 解决交互窗口自动下拉
+     (setq comint-scroll-to-bottom-on-input t)
+     (setq comint-scroll-to-bottom-on-output t)
+     (setq comint-move-point-for-output t)
+   #+END_SRC
+
+** perl
+   #+BEGIN_SRC emacs-lisp
+     (defalias 'perl-mode 'cperl-mode)
+   #+END_SRC
+
+** python
+   #+BEGIN_SRC emacs-lisp
+     (when (executable-find "ipython")
+	(setq python-shell-interpreter "ipython"))
+
+     ;; 更改键
+     (eval-after-load "python"
+	'(define-key python-mode-map (kbd "<C-return>") 'python-shell-send-region))
+
+     ;;;; PYTHON-MODE configuration
+     (eval-after-load "python-mode"
+       '(define-key python-mode-map (kbd "C-c C-p") 'py-execute-region))
+     (eval-after-load "python-mode"
+       '(define-key python-mode-map (kbd "<C-return>") 'py-execute-line))
+
+     ;; elpy
+     (elpy-enable)
+     (elpy-use-ipython)
+
+     (defvar myPackages
+       '(better-defaults
+	 ein
+	 elpy
+	 flycheck
+	 material-theme
+	 py-autopep8))
+
+     ;; use flycheck not flymake with elpy
+     (when (require 'flycheck nil t)
+       (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+       (add-hook 'elpy-mode-hook 'flycheck-mode))
+
+     ;; enable autopep8 formatting on save
+     (require 'py-autopep8)
+     (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+
+     ;; (setq python-shell-interpreter "python2"
+     ;;       python-shell-interpreter-args "-i")
+
+     ;; ;; ansi-color in ipython no working?
+     (setq py-python-command-args '("--colors=linux"))
+
+     ;; flymake
+     (when (load "flymake" t)
+       (defun flymake-pyflakes-init ()
+	 (let* ((temp-file (flymake-init-create-temp-buffer-copy
+			    'flymake-create-temp-inplace))
+		(local-file (file-relative-name
+			     temp-file
+			     (file-name-directory buffer-file-name))))
+	   (list "pycheckers"  (list local-file))))
+       (add-to-list 'flymake-allowed-file-name-masks
+		    '("\\.py\\'" flymake-pyflakes-init)))
+   #+END_SRC
+
+** shell
+   #+BEGIN_SRC emacs-lisp
+     (require 'shell-completion)
+     ;; shell 环境
+     (setq shell-file-name "/bin/bash")
+
+     ;; ansi for shell
+     (require 'ansi-color)
+
+     ;; 如果你希望使用一个支持 ANSI color 的 Shell 进程
+     (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t) 
+     (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on t)
+
+     (defvar server-buffer-clients)
+     (when (and (fboundp 'server-start) (string-equal (getenv "TERM") 'xterm))
+       (server-start)
+       (defun fp-kill-server-with-buffer-routine ()
+	 (and server-buffer-clients (server-done)))
+       (add-hook 'kill-buffer-hook 'fp-kill-server-with-buffer-routine))
+
+     ;; add local bashrc
+     (defun set-exec-path-from-shell-PATH ()
+       (let ((path-from-shell (replace-regexp-in-string
+			       "[ \t\n]*$"
+			       ""
+			       (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
+	 (setenv "PATH" path-from-shell)
+	 (setq eshell-path-env path-from-shell) ; for eshell users
+	 (setq exec-path (split-string path-from-shell path-separator))))
+
+     (when window-system (set-exec-path-from-shell-PATH))
+   #+END_SRC
+
+** multi term
+  #+BEGIN_SRC emacs-lisp
+    ;; 通过设置multi-term-program变量
+    ;; 我们可以指定新建的terminal使用何种shell
+    (setq multi-term-program "/bin/bash")
+
+    (defadvice ansi-term (after advice-term-line-mode activate)
+      (term-line-mode))
+
+    ;;;Toggles term between line mode and char mode"
+    (defun jnm/term-toggle-mode ()
+      "Toggles term between line mode and char mode"
+      (interactive)
+      (if (term-in-line-mode)
+	  (term-char-mode)
+	(term-line-mode)))
+  #+END_SRC
+
+* agenda
+  #+BEGIN_SRC emacs-lisp
+    ;;insert-current-date
+    (defun insert-current-date ()
+      "Insert the current date"
+      (interactive "*")
+      (insert (format-time-string "%Y/%m/%d %H:%M:%S" (current-time))))
+
+    (global-set-key "\C-xd" 'insert-current-date)
+
+    (setq display-time-24hr-format t)
+    (setq display-time-day-and-date t)
+    (display-time)
+
+    (setq appt-issue-message t)
+
+    ;; 设置阴历显示，在 calendar 上用 pC 显示阴历
+    (setq chinese-calendar-celestial-stem
+	  ["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+    (setq chinese-calendar-terrestrial-branch
+	  ["子" "丑" "寅" "卯" "辰" "巳" "戊" "未" "申" "酉" "戌" "亥"])
+  #+END_SRC
+
+* org
+** base
+   #+BEGIN_SRC emacs-lisp
+     ;; org-mode
+     (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+     (global-set-key "\C-cl" 'org-store-link)
+     (global-set-key "\C-ca" 'org-agenda)
+     (global-set-key "\C-cb" 'org-iswitchb)
+     (global-set-key "\C-c[" 'org-agenda-file-to-front)
+     (global-set-key "\C-c]" 'org-remove-file)
+
+     ;; setup files ending in “.org.txt” to open in org-mode
+     (add-to-list 'auto-mode-alist '("\\.org.txt\\'" . org-mode))
+
+
+     (add-hook 'org-mode-hook 'turn-on-font-lock)  
+     (setq org-src-fontify-natively t) ;; 代码高亮
+
+     ;; turn on soft wrapping mode for org mode
+     (add-hook 'org-mode-hook
+	       (lambda () (setq truncate-lines nil)))
+
+     ;; org-mode 8 no odt or mkdown export solvation
+     (eval-after-load "org"
+       '(require 'ox-md nil t)
+       )
+     (eval-after-load "org"
+       '(require 'ox-odt nil t)
+       )
+
+     ;; global keybinding
+     (global-set-key "\C-c L" 'org-insert-link-global)
+     (global-set-key "\C-c o" 'org-open-at-point-global)
+
+     ;; set org-todo-keywords
+     (setq org-todo-keywords 
+	   '((sequence "TODO" "VERIFY" "|" "DONE" "DELAYED" "DELEGATED"))) 
+
+     ;;item time
+     (setq org-log-done 'time) 
+
+     ;;iimage minomode
+     (autoload 'iimage-mode "iimage" "Support Inline image minor mode." t)
+     (autoload 'turn-on-iimage-mode "iimage" "Turn on Inline image minor mode." t)
+
+     (defun org-toggle-iimage-in-org ()
+       "display images in your org file"
+       (interactive)
+       (if (face-underline-p 'org-link)
+	   (set-face-underline-p 'org-link nil)
+	 (set-face-underline-p 'org-link t))
+       (iimage-mode))
+
+     ;;子项目都被标记为完成时，父项目自动标记为完成
+     (defun org-summary-todo (n-done n-not-done)
+	  "Switch entry to DONE when all subentries are done, to TODO otherwise."
+	  (let (org-log-done org-log-states)  ; turn off logging
+	    (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+     (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+
+     ;; input some greek chars
+     (global-set-key (kbd "C-x 8 a") "α")
+     (global-set-key (kbd "C-x 8 b") "β")
+     (global-set-key (kbd "C-x 8 d") "δ")
+     (global-set-key (kbd "C-x 8 e") "ε")
+     (global-set-key (kbd "C-x 8 w") "ψ")
+
+     (global-set-key (kbd "C-x 8 D") "Δ")
+     (global-set-key (kbd "C-x 8 W") "Ψ")
+   #+END_SRC
+
+** babel
+   #+BEGIN_SRC emacs-lisp
+     ;; in org 8 this seems not to work
+     (org-babel-do-load-languages
+      'org-babel-load-languages
+      '((R . t)
+	(python . t)
+	(sh . t) 
+	(perl . t)
+	(emacs-lisp . t)
+	(ditaa . t)
+	(matlab . t)
+	(octave . t)
+	(C . t)
+	(sh . t)
+	(dot . t)
+	(latex . t)))
+
+     (setq org-confirm-babel-evaluate nil) ;;设置输出时不必要询问是否编译代码块　in babel
+     (load "auctex.el" nil t t)
+     (load "preview-latex.el" nil t t)
+     (setq org-latex-create-formula-image-program 'imagemagick)
+   #+END_SRC
+
+** capture
+   #+BEGIN_SRC emacs-lisp
+     ;(setq org-default-notes-file (concat org-directory "/.notes.org"))
+     (global-set-key "\C-cc" 'org-capture)
+     ;; capture template
+     (setq org-capture-templates
+	   '(("t" "Todo" entry (file+headline "~/.orgf/gtd.org" "Tasks")
+		  "* TODO %?\n  %i\n  %a")
+	     ("j" "Journal" entry (file+datetree "~/.orgf/journal.org")
+		  "* %?\nEntered on %U\n  %i\n  %a")))
+   #+END_SRC
+
+** publish git io
+   #+BEGIN_SRC emacs-lisp
+     (setq org-publish-project-alist
+	   '(
+	
+	     ("org-chxp"
+	      ;; Path to your org files.
+	      :base-directory "~/syncthing/src/writing/"
+	      :base-extension "org"
+	 
+	      ;; Path to your Jekyll project.
+	      :publishing-directory "~/syncthing/src/chxp.github.io/_posts/"
+	      :recursive t
+	      :publishing-function org-publish-org-to-html
+	      :headline-levels 4 
+	      :html-extension "html"
+	      :body-only t ;; Only export section between <body> </body>
+	       )
+
+	     ("org-static-chxp"
+	      :base-directory "~/syncthing/src/writing/"
+	      :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf\\|php"
+	      :publishing-directory "~/syncthing/src/chxp.github.io/_posts/"
+	      :recursive t
+	      :publishing-function org-publish-attachment)
+
+	     ("chxp" :components ("org-chxp" "org-static-chxp"))
+	     ))
+   #+END_SRC
+
+** latex
+   #+BEGIN_SRC emacs-lisp
+     (require 'ox-bibtex) 
+
+     ;; Use latexmk to generate the thesis pdf
+     (setq org-latex-pdf-process
+	   (quote 
+	    ("latexmk -f -xelatex -silent %f")))
+
+     ;;(setq reftex-cite-format 'natbib)
+
+     (setq org-export-latex-listings t)
+     ;;(setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
+
+     (unless (boundp 'org-latex-packages-alist)
+	(setq org-latex-packages-alist nil))
+
+     ;; 使用Listings宏包格式化源代码(只是把代码框用listing环境框起来，还需要额外的设置)
+     (setq org-export-latex-listings t)
+     ;; Make Org use ido-completing-read for most of its completing prompts.
+     (setq org-completion-use-ido t)
+
+     (setq ps-paper-type 'a4
+	   ps-font-size 16.0
+	   ps-print-header nil
+	   ps-landscape-mode nil)
+   #+END_SRC
+
+** template load
+   #+BEGIN_SRC emacs-lisp
+     (load-file "~/syncthing/emacs/es_template/latex_thesis.lisp")
+     (load-file "~/syncthing/emacs/es_template/latex_general.lisp")
+   #+END_SRC
+
+** org-ref
+   #+BEGIN_SRC emacs-lisp
+     (setq bibtex-completion-bibliography "~/syncthing/emacs/zotero.bib"
+	   bibtex-completion-library-path "~/syncthing/emacs/zotero.bib")
+     (setq org-ref-default-bibliography '("~/syncthing/emacs/zotero.bib")
+	   org-ref-pdf-directory "~/syncthing/zotero/")
+     (require 'org-ref)
+     (require 'org-ref-citeproc)
+     ;; (add-hook 'org-export-before-parsing-hook 'orcp-citeproc)
+   #+END_SRC
+
+** reftex
+   #+BEGIN_SRC emacs-lisp
+     (setq reftex-default-bibliography
+	   (quote
+	    ("default.bib" "~/syncthing/emacs/zotero.bib"))) 
+
+     (setq reftex-plug-into-AUCTeX t)
+
+     (add-hook 'org-mode-hook
+	       (lambda ()
+		 (define-key org-mode-map (kbd "C-c (") 'reftex-citation)
+		 (define-key org-mode-map (kbd "C-c )") 'org-ref-helm-insert-cite-link)
+		 (define-key org-mode-map (kbd "C-c 0") 'org-ref-helm-insert-cite-link)
+		 )
+	       )
+
+     ;; reftex formats, makes same as org-ref
+     (setq reftex-cite-format "cite:%l")
+     (reftex-mode t)
+   #+END_SRC
+
+
+
