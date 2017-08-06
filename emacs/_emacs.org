@@ -599,7 +599,8 @@
 	(term-line-mode)))
   #+END_SRC
 
-* agenda
+* note related
+** agenda
   #+BEGIN_SRC emacs-lisp
     ;;insert-current-date
     (defun insert-current-date ()
@@ -621,6 +622,21 @@
     (setq chinese-calendar-terrestrial-branch
 	  ["子" "丑" "寅" "卯" "辰" "巳" "戊" "未" "申" "酉" "戌" "亥"])
   #+END_SRC
+
+** capture
+   #+BEGIN_SRC emacs-lisp
+     ;; (setq org-default-notes-file (concat org-directory "/.notes.org"))
+     (global-set-key "\C-cc" 'org-capture)
+     ;; capture template
+     (setq org-capture-templates
+	   '(("t" "Todo" entry (file+headline "~/.orgf/gtd.org" "Tasks")
+	      "* TODO %?\n  %i\n  %a")
+	     ("s" "Simulation Experiment record（模拟实验记录）" entry (file+datetree "~/documents/phone/tagspace/lab/sim.org.txt")
+	      "* %?\nEntered on %U\n  %i\n  %a")
+	     ("j" "Journal" entry (file+datetree "~/.orgf/journal.org")
+	      "* %?\nEntered on %U\n  %i\n  %a"))
+	   )
+   #+END_SRC
 
 * org
 ** base
@@ -716,18 +732,6 @@
      (load "auctex.el" nil t t)
      (load "preview-latex.el" nil t t)
      (setq org-latex-create-formula-image-program 'imagemagick)
-   #+END_SRC
-
-** capture
-   #+BEGIN_SRC emacs-lisp
-     ;(setq org-default-notes-file (concat org-directory "/.notes.org"))
-     (global-set-key "\C-cc" 'org-capture)
-     ;; capture template
-     (setq org-capture-templates
-	   '(("t" "Todo" entry (file+headline "~/.orgf/gtd.org" "Tasks")
-		  "* TODO %?\n  %i\n  %a")
-	     ("j" "Journal" entry (file+datetree "~/.orgf/journal.org")
-		  "* %?\nEntered on %U\n  %i\n  %a")))
    #+END_SRC
 
 ** publish git io
