@@ -632,7 +632,7 @@
 	   '(("t" "Todo" entry (file+headline "~/.orgf/gtd.org" "Tasks")
 	      "* TODO %?\n  %i\n  %a")
 	     ("s" "Simulation Experiment record（模拟实验记录）" entry (file+datetree "~/documents/phone/tagspace/lab/sim.org.txt")
-	      "* %?\nEntered on %U\n  %i\n  %a")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  主要位置： %a")
 	     ("j" "Journal" entry (file+datetree "~/.orgf/journal.org")
 	      "* %?\nEntered on %U\n  %i\n  %a"))
 	   )
