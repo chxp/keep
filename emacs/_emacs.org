@@ -629,12 +629,107 @@
      (global-set-key "\C-cc" 'org-capture)
      ;; capture template
      (setq org-capture-templates
-	   '(("t" "Todo" entry (file+headline "~/.orgf/gtd.org" "Tasks")
+	   '(
+	     ;; general
+	     ("t" "Todo" entry (file+headline "~/.orgf/gtd.org" "Tasks")
 	      "* TODO %?\n  %i\n  %a")
-	     ("s" "Simulation Experiment record（模拟实验记录）" entry (file+datetree "~/documents/phone/tagspace/lab/sim.org.txt")
-	      "* %?\n  记录于： %U\n\n  %i\n\n  主要位置： %a")
-	     ("j" "Journal" entry (file+datetree "~/.orgf/journal.org")
-	      "* %?\nEntered on %U\n  %i\n  %a"))
+
+	     ;; record
+	     ("S" "simulation 模拟实验记录" entry
+	      (file+datetree "~/documents/phone/tagspace/record/sim/sim.org.txt")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  主要位置： %a \n")
+	     ("O" "行程或者其他记录" entry
+	      (file+datetree "~/documents/phone/tagspace/record/other/other.org.txt")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考位置： %a \n")
+	     ("I" "idea" entry
+	      (file+olp "~/documents/phone/tagspace/record/keep/keep.org.txt" "Keep" "Idea")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ;; life
+	     ("f" "life 生活笔记")
+	     ("fe" "与经济相关的" entry
+	      (file+olp "~/documents/phone/tagspace/record/life/life.org.txt" "Life" "Eco")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("fg" "零碎的笔记" entry
+	      (file+olp "~/documents/phone/tagspace/record/life/life.org.txt" "Life" "General")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("fo" "其他生活笔记" entry
+	      (file+olp "~/documents/phone/tagspace/record/life/life.org.txt" "Life" "Other")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ;; learning notes
+	     ("e" "emacs 相关笔记")
+	     ("eb" "基本操作相关" entry
+	      (file+olp "~/documents/phone/tagspace/frags/emacs/emacs.org.txt" "Emacs" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("eo" "org-mode 基本操作相关" entry
+	      (file+olp "~/documents/phone/tagspace/frags/emacs/emacs.org.txt" "Emacs" "Org-Mode")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ("l" "linux 相关笔记")
+	     ("ld" "desktop 桌面相关" entry
+	      (file+olp "~/documents/phone/tagspace/frags/linux/linux.org.txt" "Linux" "Desktop")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("lg" "git 相关" entry
+	      (file+olp "~/documents/phone/tagspace/frags/linux/linux.org.txt" "Linux" "Git")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("ll" "latex 相关" entry
+	      (file+olp "~/documents/phone/tagspace/frags/linux/linux.org.txt" "Linux" "Latex")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("la" "其他应用" entry
+	      (file+olp "~/documents/phone/tagspace/frags/linux/linux.org.txt" "Linux" "Others")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ("m" "math 数学及计算机相关笔记")
+	     ("mb" "math 基本知识" entry
+	      (file+olp "~/documents/phone/tagspace/frags/math/math.org.txt" "Math" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("mc" "math 与计算机交叉" entry
+	      (file+olp "~/documents/phone/tagspace/frags/math/math.org.txt" "Math" "Computer")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ("d" "md 分子动力学相关")
+	     ("db" "md 基本笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/md/md.org.txt" "MD" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("da" "amber 笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/md/md.org.txt" "MD" "Amber")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("dp" "pymol 笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/md/md.org.txt" "MD" "Pymol")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ("p" "python perl笔记")
+	     ("pa" "python 基本笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/python/python.org.txt" "Python" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("pb" "python 科学计算（numpy, pandas）" entry
+	      (file+olp "~/documents/phone/tagspace/frags/python/python.org.txt" "Python" "Sci")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("pc" "python 正则（re）" entry
+	      (file+olp "~/documents/phone/tagspace/frags/python/python.org.txt" "Python" "Re")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("ph" "perl 基本笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/python/python.org.txt" "Perl" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ("r" "R Shell笔记")
+	     ("ra" "R 基本笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/R/R.org.txt" "R" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("rb" "R 绘图笔记（base, ggplot）" entry
+	      (file+olp "~/documents/phone/tagspace/frags/R/R.org.txt" "R" "Plot")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("rs" "Shell 基本笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/R/R.org.txt" "Shell" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     ("k" "其他学习相关的笔记")
+	     ("kk" "其他学习相关的笔记" entry
+	      (file+olp "~/documents/phone/tagspace/frags/keep/keep.org.txt" "Keep" "Keep")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+
+	     )
 	   )
    #+END_SRC
 
