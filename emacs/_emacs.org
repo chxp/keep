@@ -646,13 +646,14 @@
 	      "* TODO %?\n  %i\n  %a")
 
 	     ;; record
-	     ("S" "simulation 模拟实验记录" entry
-	      (file+datetree "~/documents/phone/tagspace/record/sim/sim.org.txt")
-	      "* %?\n  记录于： %U\n\n  %i\n\n  主要位置： %a \n")
-	     ("O" "行程或者其他记录" entry
+	     ("a" "实验记录")
+	     ("aa" "模拟实验记录" entry
+	     (file+datetree "~/documents/phone/tagspace/record/csim/csim.org.txt")
+	     "* %?\n  记录于： %U\n\n  %i\n\n  主要位置： %a \n")
+	     ("o" "行程或者其他时间记录" entry
 	      (file+datetree "~/documents/phone/tagspace/record/other/other.org.txt")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考位置： %a \n")
-	     ("I" "idea" entry
+	     ("i" "idea" entry
 	      (file+olp "~/documents/phone/tagspace/record/keep/keep.org.txt" "Keep" "Idea")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
 
