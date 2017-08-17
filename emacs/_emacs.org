@@ -628,7 +628,7 @@
     (load-library "find-lisp")
 
     (setq org-agenda-files (append
-    (find-lisp-find-files "~/documents/phone/tagspace/frags/" "\.org.txt$")
+    (find-lisp-find-files "~/documents/phone/tagspace/notes/" "\.org.txt$")
     (find-lisp-find-files "~/documents/phone/tagspace/record/" "\.org.txt$")
     ))
 
