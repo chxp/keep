@@ -707,6 +707,9 @@
 	     ("da" "amber 笔记" entry
 	      (file+olp "~/documents/phone/tagspace/notes/md/md.org.txt" "MD" "Amber")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("dg" "Gaussian 笔记" entry
+	      (file+olp "~/documents/phone/tagspace/notes/md/md.org.txt" "MD" "Gaussian")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
 	     ("dp" "pymol 笔记" entry
 	      (file+olp "~/documents/phone/tagspace/notes/md/md.org.txt" "MD" "Pymol")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
@@ -901,8 +904,8 @@
 
 ** template load
    #+BEGIN_SRC emacs-lisp
-     (load-file "~/syncthing/emacs/es_template/latex_thesis.lisp")
-     (load-file "~/syncthing/emacs/es_template/latex_general.lisp")
+     (load-file "~/syncthing/emacs/template/latex_thesis.lisp")
+     (load-file "~/syncthing/emacs/template/latex_general.lisp")
    #+END_SRC
 
 ** org-ref
