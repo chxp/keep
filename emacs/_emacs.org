@@ -904,8 +904,9 @@
 
 ** template load
    #+BEGIN_SRC emacs-lisp
-     (load-file "~/syncthing/emacs/template/latex_thesis.lisp")
-     (load-file "~/syncthing/emacs/template/latex_general.lisp")
+     (load-file "~/syncthing/emacs/es_template/latex_thesis.lisp")
+     (load-file "~/syncthing/emacs/es_template/latex_general.lisp")
+     (load-file "~/syncthing/emacs/es_template/latex_extra.lisp")
    #+END_SRC
 
 ** org-ref
