@@ -811,7 +811,6 @@
 
      ;; input some greek chars
      (global-set-key (kbd "C-x 8 a") "α")
-     (global-set-key (kbd "C-x 8 A") "Å")
      (global-set-key (kbd "C-x 8 b") "β")
      (global-set-key (kbd "C-x 8 d") "δ")
      (global-set-key (kbd "C-x 8 e") "ε")
@@ -819,6 +818,10 @@
 
      (global-set-key (kbd "C-x 8 D") "Δ")
      (global-set-key (kbd "C-x 8 W") "Ψ")
+
+     ;; other
+     (global-set-key (kbd "C-x 7 a") (lambda () (interactive) (insert "Å")))
+
    #+END_SRC
 
 ** babel
