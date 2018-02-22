@@ -811,6 +811,7 @@
 
      ;; input some greek chars
      (global-set-key (kbd "C-x 8 a") "α")
+     (global-set-key (kbd "C-x 8 A") "Å")
      (global-set-key (kbd "C-x 8 b") "β")
      (global-set-key (kbd "C-x 8 d") "δ")
      (global-set-key (kbd "C-x 8 e") "ε")
