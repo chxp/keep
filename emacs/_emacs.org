@@ -511,7 +511,12 @@
 
      ;; elpy
      (elpy-enable)
-     (elpy-use-ipython)
+     ;;;; 使用 jupyter 作为解释器
+     (setq python-shell-interpreter "jupyter"
+	   python-shell-interpreter-args "console --simple-prompt"
+	   python-shell-prompt-detect-failure-warning nil)
+     (add-to-list 'python-shell-completion-native-disabled-interpreters
+		  "jupyter")
 
      (defvar myPackages
        '(better-defaults
