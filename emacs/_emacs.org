@@ -706,18 +706,30 @@
 	      (file+olp "~/documents/phone/tagspace/notes/math/math.org.txt" "Math" "Computer")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
 
-	     ("d" "md 分子动力学相关")
-	     ("db" "md 基本笔记" entry
-	      (file+olp "~/documents/phone/tagspace/notes/md/md.org.txt" "MD" "Base")
+	     ("b" "生物数据分析相关的")
+	     ("bd" "md 基本笔记" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "MD" "Base")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
-	     ("da" "amber 笔记" entry
-	      (file+olp "~/documents/phone/tagspace/notes/md/md.org.txt" "MD" "Amber")
+	     ("ba" "amber 笔记" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "MD" "Amber")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
-	     ("dg" "Gaussian 笔记" entry
-	      (file+olp "~/documents/phone/tagspace/notes/md/md.org.txt" "MD" "Gaussian")
+	     ("bg" "Gaussian 笔记" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "MD" "Gaussian")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
-	     ("dp" "pymol 笔记" entry
-	      (file+olp "~/documents/phone/tagspace/notes/md/md.org.txt" "MD" "Pymol")
+	     ("bp" "pymol 笔记" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "MD" "Pymol")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("bs" "seq 基础笔记" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "Seq" "Base")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("bc" "ChIP 数据分析" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "Seq" "ChIP")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("br" "RNA-seq 数据分析" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "Seq" "RNA-seq")
+	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
+	     ("bo" "seq 数据分析相关" entry
+	      (file+olp "~/documents/phone/tagspace/notes/bio/bio.org.txt" "Seq" "Other")
 	      "* %?\n  记录于： %U\n\n  %i\n\n  参考链接： %a \n")
 
 	     ("p" "python perl笔记")
