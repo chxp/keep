@@ -849,14 +849,13 @@
       'org-babel-load-languages
       '((R . t)
 	(python . t)
-	(sh . t) 
+	(shell . t) 
 	(perl . t)
 	(emacs-lisp . t)
 	(ditaa . t)
 	(matlab . t)
 	(octave . t)
 	(C . t)
-	(sh . t)
 	(dot . t)
 	(latex . t)))
 
