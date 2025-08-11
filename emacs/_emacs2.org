@@ -1,0 +1,1605 @@
+#+PROPERTY: header-args :tangle ~/syncthing/emacs/_emacs2.el
+
+* package related 
+** el-get
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path "~/.emacs.d/mine")
+  (add-to-list 'load-path "~/.emacs.d/el-get/el-get")
+
+  (unless (require 'el-get nil 'noerror)
+    (require 'package)
+    (add-to-list 'package-archives
+		 '("melpa" . "http://melpa.org/packages/"))
+    (package-refresh-contents)
+    (package-initialize)
+    (package-install 'el-get)
+    (require 'el-get))
+
+  (el-get 'sync)
+#+END_SRC
+
+** elpa
+#+BEGIN_SRC emacs-lisp
+  (add-to-list 'load-path "~/.emacs.d/elpa")
+
+  (setq package-archives
+	'(("melpa" . "https://melpa.org/packages/")
+	  ("elp" . "https://elpa.gnu.org/packages/")
+	  ("gnu-devel" . "https://elpa.gnu.org/devel/")
+	  ("nongnu" . "https://elpa.nongnu.org/nongnu/")
+	  ))
+#+END_SRC
+
+** use-package
+#+begin_src emacs-lisp
+  (require 'use-package)
+#+end_src
+
+* emacs version change
+** org9.5
+#+begin_src emacs-lisp
+  ;; 激活 org "<s" 模板（easy templates）功能
+  (require 'org-tempo)
+#+end_src
+* base cfg
+** usr setting
+#+BEGIN_SRC emacs-lisp
+  (defalias 'qrr 'query-replace-regexp)
+  (setq default-directory "~/")
+#+END_SRC
+
+** 括号匹配
+#+BEGIN_SRC emacs-lisp
+  ;;打开括号匹配显示模式
+  (setq show-paren-mode t) 
+  (setq show-paren-style 'parenthesis) ;;括号匹配时可以高亮显示另外一边的括号，但光标不会烦人的跳到另一个括号处
+
+  ;;括号匹配,找到对应的括号
+  (global-set-key "%" 'match-paren)          
+  (defun match-paren (arg)
+    "Go to the matching paren if on a paren; otherwise insert %."
+    (interactive "p")
+    (cond ((looking-at "\\s\(") (forward-list 1) (backward-char 1))
+	  ((looking-at "\\s\)") (forward-char 1) (backward-list 1))
+	  (t (self-insert-command (or arg 1)))))
+#+END_SRC
+
+** other
+#+BEGIN_SRC emacs-lisp
+  (tool-bar-mode -1)
+  (menu-bar-mode -1)
+  ;; 允许外部粘贴
+  (setq x-select-enable-clipboard t)
+  ;; 光标靠近鼠标指针时，让鼠标指针自动让开, 特好玩
+  (mouse-avoidance-mode 'animate)
+  ;; 使用鼠标中键可以粘贴
+  (setq mouse-yank-at-point t)
+  ;;指针不要闪，我得眼睛花了
+  (blink-cursor-mode -1)
+
+  ;; auto image
+  (setq auto-image-file-mode t) 
+
+  ;;自动折行
+  (setq-default truncate-lines t)
+
+  ;;关闭emacs启动时的画面
+  (setq inhibit-startup-message t)
+
+  ;;去掉滚动条
+  (set-scroll-bar-mode nil)
+
+  ;; 改变 Emacs 固执的要你回答 yes 的行为。按 y 或空格键表示 yes，n 表示 no。
+  (fset 'yes-or-no-p 'y-or-n-p)
+
+  (global-font-lock-mode   t)
+
+  (setq-default line-spacing 2)
+
+#+END_SRC
+
+** 大文本僵死解决方案
+#+begin_src emacs-lisp
+  ;; 选择大文本时冻死的解决方案
+  (setq select-active-regions (quote only))
+#+end_src
+* ibuffer dired
+** ibuffer
+#+BEGIN_SRC emacs-lisp
+  (require 'ibuffer)  
+  (global-set-key (kbd "C-x C-b") 'ibuffer)  
+
+  ;; Use human readable Size column instead of original one　from purcell
+  (define-ibuffer-column size-h
+    (:name "Size" :inline t)
+    (cond
+     ((> (buffer-size) 1000000) (format "%7.1fM" (/ (buffer-size) 1000000.0)))
+     ((> (buffer-size) 1000) (format "%7.1fk" (/ (buffer-size) 1000.0)))
+     (t (format "%8d" (buffer-size)))))
+
+
+  ;; 对ibuffer 进行分组
+  (setq ibuffer-saved-filter-groups
+	(quote (("default"
+		 ("dired-remote" (and
+				  (mode . dired-mode)
+				  (filename . "\\/ssh:.*$")
+				  ))
+		 ("dired-local" (and
+				 (mode . dired-mode)
+				 ;; (filename . "^[^/][^s][^s][^h].*")
+				 ))
+		 ("org"   (mode . org-mode))
+		 ("terminal"   (or
+			       (mode . shell-mode)
+			       (mode . term-mode)
+			       (mode . term-mode)
+			       ))
+		 ("scripts" (or
+				 (mode . python-mode)
+				 (mode . cperl-mode)
+				 (mode . ess-mode)
+				 ))
+		 ;; ("erc" (mode . erc-mode))
+		 ;; ("planner" (or
+		 ;; 		   (name . "^\\*Calendar\\*$")
+		 ;; 		   (name . "^diary$")
+		 ;; 		   (mode . muse-mode)))
+		 ("emacs" (or
+			   (name . "^\\*scratch\\*$")
+			   (name . "^\\*Messages\\*$")))
+		 ("gnus" (or
+			  (mode . message-mode)
+			  (mode . bbdb-mode)
+			  (mode . mail-mode)
+			  (mode . gnus-group-mode)
+			  (mode . gnus-summary-mode)
+			  (mode . gnus-article-mode)
+			  (name . "^\\.bbdb$")
+			  (name . "^\\.newsrc-dribble")))
+		 ("helm"  (or
+			   (mode . helm-mode)
+			   (name . "^\\*helm.*$")
+			   ))
+		 ("temp"  (or
+			   (name . "^\\*Async.*$")
+			   ))
+		 ))))
+
+  (add-hook 'ibuffer-mode-hook
+	    (lambda ()
+	      (ibuffer-switch-to-saved-filter-groups "default")))
+
+  ;; 折叠一些不用的 group
+  (setq mp/ibuffer-collapsed-groups (list "helm" "*Internal*"))
+
+  (defadvice ibuffer (after collapse-helm)
+    (dolist (group mp/ibuffer-collapsed-groups)
+      (progn
+	(goto-char 1)
+	(when (search-forward (concat "[ " group " ]") (point-max) t)
+	  (progn
+	    (move-beginning-of-line nil)
+	    (ibuffer-toggle-filter-group)
+	    )
+	  )
+	)
+      )
+    (goto-char 1)
+    (search-forward "[ " (point-max) t)
+    )
+
+  (ad-activate 'ibuffer)
+#+END_SRC
+** ansi-color
+#+BEGIN_SRC emacs-lisp
+  (require 'ansi-color)
+  (defun display-ansi-colors ()
+    (interactive)
+    (ansi-color-apply-on-region (point-min) (point-max)))
+#+END_SRC
+
+** dired general
+#+BEGIN_SRC emacs-lisp
+  (define-key global-map (kbd "C-x C-j") 'dired-jump)
+  (define-key global-map (kbd "C-x 4 C-j") 'dired-jump-other-window)
+  (put 'dired-find-alternate-file 'disabled t)
+
+  ;; ;;;; 
+  ;; (require 'dired+)
+  ;; dired+ 默认开启 dired-hide-details-mode 需下面才能关闭
+  (setq diredp-hide-details-initially-flag nil)
+  (setq diredp-hide-details-propagate-flag nil)
+  ;; ;; (require 'dired-sort)
+
+  ;;;; human readable file size, from purcell
+  (setq dired-listing-switches "-alh")
+  (setq directory-free-space-args "-Pm")
+  (defun ls-lisp-format-file-size (file-size human-readable)
+    (if (or (not human-readable)
+	    (< file-size 1024))
+	(format (if (floatp file-size) " %11.0f" " %11d") file-size)
+      (do ((file-size (/ file-size 1024.0) (/ file-size 1024.0))
+	   ;; kilo, mega, giga, tera, peta, exa
+	   (post-fixes (list "k" "M" "G" "T" "P" "E") (cdr post-fixes)))
+	  ((< file-size 1024) (format " %10.0f%s"  file-size (car post-fixes))))))
+#+END_SRC
+
+** dired git
+#+BEGIN_SRC emacs-lisp
+  ;; ;; gutter
+  ;; (global-git-gutter+-mode)
+  ;; git-gutter
+  (global-git-gutter-mode 1)
+
+  ;; dire-k
+  (require 'dired-k)
+  (add-hook 'dired-initial-position-hook 'dired-k)
+  ;; use dired-k alternative to revert-buffer
+  (define-key dired-mode-map (kbd "g") 'dired-k)
+#+END_SRC
+
+* Window frame related 
+** window
+#+BEGIN_SRC emacs-lisp
+  ;; 四窗口
+  (require 'window-numbering)
+  (window-numbering-mode 1)
+
+  (winner-mode 1)
+  ;; copied from http://puntoblogspot.blogspot.com/2011/05/undo-layouts-in-emacs.html
+  (global-set-key (kbd "C-x 4 u") 'winner-undo)
+  (global-set-key (kbd "C-x 4 r") 'winner-redo)
+
+  ;; 三窗口设置
+  (defun change-split-type (split-fn &optional arg)
+    "Change 3 window style from horizontal to vertical and vice-versa"
+    (let ((bufList (mapcar 'window-buffer (window-list))))
+      (select-window (get-largest-window))
+      (funcall split-fn arg)
+      (mapcar* 'set-window-buffer (window-list) bufList)))
+
+  (defun change-split-type-3-v (&optional arg)
+    "change 3 window style from horizon to vertical"
+    (interactive "P")
+    (change-split-type 'split-window-3-horizontally arg))
+
+  (defun change-split-type-3-h (&optional arg)
+    "change 3 window style from vertical to horizon"
+    (interactive "P")
+    (change-split-type 'split-window-3-vertically arg))
+
+  (defun split-window-3-horizontally (&optional arg)
+    "Split window into 3 while largest one is in horizon"
+    (delete-other-windows)
+    (split-window-horizontally)
+    (if arg (other-window 1))
+    (split-window-vertically))
+
+  (defun split-window-3-vertically (&optional arg)
+    "Split window into 3 while largest one is in vertical"
+    (delete-other-windows)
+    (split-window-vertically)
+    (if arg (other-window 1))
+    (split-window-horizontally))
+
+  ;;; 键的绑定
+  (global-set-key (kbd "C-x 9 v") 'change-split-type-3-v)
+  (global-set-key (kbd "C-x 9 h") 'change-split-type-3-h)
+
+  ;;; full screen
+  (global-set-key [f11] 'my-fullscreen)
+
+  (defun my-fullscreen ()
+    (interactive)
+    (x-send-client-message
+     nil 0 nil "_NET_WM_STATE" 32
+     '(2 "_NET_WM_STATE_FULLSCREEN" 0))
+    )
+
+  ;;该函数用于最大化,状态值为1说明最大化后不会被还原
+  ;;因为这里有两次最大化 (分别是水平和垂直)
+  (defun my-maximized ()
+    (interactive)
+    (x-send-client-message
+     nil 0 nil "_NET_WM_STATE" 32
+     '(1 "_NET_WM_STATE_MAXIMIZED_HORZ" 0))
+    (interactive)
+    (x-send-client-message
+     nil 0 nil "_NET_WM_STATE" 32
+     '(1 "_NET_WM_STATE_MAXIMIZED_VERT" 0)))
+  (my-maximized) 
+#+END_SRC
+
+** split window
+#+BEGIN_SRC emacs-lisp
+  (fset 'wt4
+	[?\C-x ?2 ?\C-x ?3 ?\M-3 ?\C-x ?3 ?\M-1 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?1 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?2 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?3 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?4 return ?\M-2 ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?5 return ?\M-3 ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?h ?o ?m ?e ?- ?s ?h ?e ?l ?l return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?1 return])
+
+  (fset 'wt5
+	(kmacro-lambda-form [?\C-x ?2 ?\C-x ?3 ?\C-x ?o ?\C-x ?o ?\C-x ?3 ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?1 return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?2 return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?3 return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?4 return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?l ?s ?h ?5 return ?\M-x ?s ?h ?e ?l ?l return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?h ?o ?m ?e ?- ?s ?h ?e ?l ?l return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?1 return ?\M-x ?r backspace ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?2 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?3 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?4 return ?\M-x ?m ?u ?l ?t ?i ?- ?t ?e ?r ?m return ?\M-x ?r ?e ?n ?a ?m ?e ?- ?b ?u ?f ?f ?e ?r return ?t ?m ?5 return] 0 "%d"))
+
+
+#+END_SRC
+
+** theme
+#+BEGIN_SRC emacs-lisp
+  ;; change to the color-theme-modern
+  (add-to-list 'custom-theme-load-path
+	       (file-name-as-directory "~/syncthing/emacs/replace-colorthemes/"))
+
+  (load-theme 'calm-forest t t)
+  (enable-theme 'calm-forest)
+
+  ;; ;;(color-theme-euphoria)
+  ;; ;;(color-theme-dark-green)
+  ;; ;;(color-theme-deep-blue-2)
+  ;; ;;(color-theme-lethe)
+  ;; ;;(color-theme-matrix)
+  ;; ;;(color-theme-hober)
+  ;; ;;(color-theme-taming-mr-arneson)
+  ;; ;;(color-theme-oswald)
+  ;; ;;(color-theme-tty-dark)
+  ;; ;;(color-theme-taylor)
+  ;; ;;(color-theme-vim-color)
+  ;; ;;(color-theme-wheat)
+  ;; (require 'color-theme-sanityinc-tomorrow)
+  ;; (color-theme-sanityinc-tomorrow--define-theme night)
+#+END_SRC
+
+** font
+#+BEGIN_SRC emacs-lisp
+  ;; 之前长期的设定：  Consolas 13 & WenQuanyi Micro Hei Mono
+  ;; {"Dejavu Sans Mono 10" 与 "WenQuanyi Micro Hei Mono 16"}
+  ;; {"Dejavu Sans Mono 11" 与 "WenQuanyi Micro Hei Mono 18"}
+  ;; {"Consolas 11" 与 "Microsoft Yahei 16"}
+  ;; {"Consolas 13" 与 "WenQuanyi Micro Hei Mono 18"}
+  ;; {"Liberation Mono 12" 与 "WenQuanYi Micro Hei Mono 20"}
+  ;; {"Liberation Mono 11" 与 "WenQuanYi Micro Hei Mono 18"}
+  ;; {"monaco 11" 与 "WenQuanYi Micro Hei Mono 18"}
+  ;; {"monaco 11" 与 "Microsoft Yahei 15"}
+  ;; "inconsolata 13"and  "WenQuanYi Micro Hei Mono" :size 18
+#+END_SRC
+** coding
+#+BEGIN_SRC emacs-lisp
+  ;; set the default text coding system
+  (setq default-buffer-file-coding-system 'utf-8)
+  (prefer-coding-system 'utf-8)
+
+  ;;system-time-format
+  (setq system-time-locale "C")
+
+  ;; enforce utf-8 as the default coding system
+  (prefer-coding-system 'utf-8)
+  (set-default-coding-systems 'utf-8)
+  (set-terminal-coding-system 'utf-8)
+  (set-keyboard-coding-system 'utf-8)
+  ;; backwards compatibility as default-buffer-file-coding-system
+  ;; is deprecated in 23.2.
+  (if (boundp 'buffer-file-coding-system)
+      (setq-default buffer-file-coding-system 'utf-8)
+    (setq default-buffer-file-coding-system 'utf-8))
+  ;; Treat clipboard input as UTF-8 string first; compound text next, etc.
+  (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))
+#+END_SRC
+
+* completion related 
+** helm
+#+BEGIN_SRC emacs-lisp
+  (require 'helm)
+  (require 'helm-config)
+
+  (global-set-key (kbd "M-x") 'helm-M-x)
+  (global-set-key (kbd "M-y") 'helm-show-kill-ring)
+  ;; (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to do persistent action
+  (define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB works in terminal
+  (define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+  (helm-mode 1)
+
+  ;; using ido elsewhere
+  (add-to-list 'helm-completing-read-handlers-alist '(execute-extended-command . ido))
+  (add-to-list 'helm-completing-read-handlers-alist '(find-files . ido))
+#+END_SRC
+
+** ido
+#+BEGIN_SRC emacs-lisp
+  (require 'ido)
+  (ido-mode t)
+
+  ;; from purcell
+  ;; ido everwhere conflict with helm
+  ;; (ido-everywhere t)
+  (setq ido-enable-flex-matching t)
+  (setq ido-use-filename-at-point nil)
+  (setq ido-auto-merge-work-directories-length 0)
+  (setq ido-use-virtual-buffers t)
+  ;; Use smex to handle M-x
+  ;; Change path for ~/.smex-items
+  (setq smex-save-file (expand-file-name ".smex-items" user-emacs-directory))
+  (global-set-key [remap execute-extended-command] 'smex)
+  (require 'idomenu)
+  ;; Allow the same buffer to be open in different frames
+  (setq ido-default-buffer-method 'selected-window)
+  ;; http://www.reddit.com/r/emacs/comments/21a4p9/use_recentf_and_ido_together/cgbprem
+  (add-hook 'ido-setup-hook (lambda () (define-key ido-completion-map [up] 'previous-history-element)))
+#+END_SRC
+
+** recentf
+#+BEGIN_SRC emacs-lisp
+  (recentf-mode 1)
+  (setq recentf-max-saved-items 1000
+	recentf-exclude '("/tmp/" "/ssh:"))
+#+END_SRC
+
+* tramp
+#+BEGIN_SRC emacs-lisp
+  (require 'tramp)
+  (setq tramp-default-method "scp")
+
+  (defun make-comint-directory-tracking-work-remotely ()
+    "Add this to comint-mode-hook to make directory tracking work
+  while sshed into a remote host, e.g. for remote shell buffers
+  started in tramp. (This is a bug fix backported from Emacs 24:
+  http://comments.gmane.org/gmane.emacs.bugs/39082"
+    (set (make-local-variable 'comint-file-name-prefix)
+	 (or (file-remote-p default-directory) "")))
+  (add-hook 'comint-mode-hook 'make-comint-directory-tracking-work-remotely)
+
+
+  ;; automatically close completions frame buffer in Emacs shell (comint) mode
+  (defun comint-close-completions ()
+    "Close the comint completions buffer.
+  Used in advice to various comint functions to automatically close
+  the completions buffer as soon as I'm done with it. Based on
+  Dmitriy Igrishin's patched version of comint.el."
+    (if comint-dynamic-list-completions-config
+	(progn
+	  (set-window-configuration comint-dynamic-list-completions-config)
+	  (setq comint-dynamic-list-completions-config nil))))
+
+  (defadvice comint-send-input (after close-completions activate)
+    (comint-close-completions))
+
+  (defadvice comint-dynamic-complete-as-filename (after close-completions activate)
+    (if ad-return-value (comint-close-completions)))
+
+  (defadvice comint-dynamic-simple-complete (after close-completions activate)
+    (if (member ad-return-value '('sole 'shortest 'partial))
+	(comint-close-completions)))
+
+  (defadvice comint-dynamic-list-completions (after close-completions activate)
+    (comint-close-completions)
+    (if (not unread-command-events)
+	;; comint's "Type space to flush" swallows space. put it back in.
+	(setq unread-command-events (listify-key-sequence " "))))
+
+  (add-hook 'comint-mode-hook (lambda () (set (make-local-variable 'comint-file-name-prefix) (or (file-remote-p default-directory) ""))))
+
+  (when (memq window-system '(mac ns))
+    (exec-path-from-shell-initialize))
+#+END_SRC
+
+#+BEGIN_SRC emacs-lisp
+  (setq tramp-use-ssh-controlmaster-options nil)
+#+END_SRC
+
+* language related
+** paredit
+#+BEGIN_SRC emacs-lisp
+  ;; from Purcell
+  (require 'paredit)
+  (autoload 'enable-paredit-mode "paredit")
+  (defun maybe-map-paredit-newline ()
+    (unless (or (memq major-mode '(inferior-emacs-lisp-mode cider-repl-mode))
+		(minibufferp))
+      (local-set-key (kbd "RET") 'paredit-newline)))
+  (add-hook 'paredit-mode-hook 'maybe-map-paredit-newline)
+
+  ;;(diminish 'paredit-mode " Par")
+  (dolist (binding (list (kbd "C-<left>") (kbd "C-<right>")
+			 (kbd "C-M-<left>") (kbd "C-M-<right>")))
+    (define-key paredit-mode-map binding nil))
+  ;; Disable kill-sentence, which is easily confused with the kill-sexp
+  ;; binding, but doesn't preserve sexp structure
+  (define-key paredit-mode-map [remap kill-sentence] nil)
+  (define-key paredit-mode-map [remap backward-kill-sentence] nil)
+  ;; Allow my global binding of M-? to work when paredit is active
+  (define-key paredit-mode-map (kbd "M-?") nil)
+
+  ;; Compatibility with other modes
+  ;; (suspend-mode-during-cua-rect-selection 'paredit-mode)
+  ;; Use paredit in the minibuffer
+  ;; TODO: break out into separate package
+  ;; http://emacsredux.com/blog/2013/04/18/evaluate-emacs-lisp-in-the-minibuffer/
+  (add-hook 'minibuffer-setup-hook 'conditionally-enable-paredit-mode)
+  (defvar paredit-minibuffer-commands '(eval-expression
+					pp-eval-expression
+					eval-expression-with-eldoc
+					ibuffer-do-eval
+					ibuffer-do-view-and-eval)
+    "Interactive commands for which paredit should be enabled in the minibuffer.")
+  (defun conditionally-enable-paredit-mode ()
+    "Enable paredit during lisp-related minibuffer commands."
+    (if (memq this-command paredit-minibuffer-commands)
+	(enable-paredit-mode)))
+#+END_SRC
+
+** c
+#+BEGIN_SRC emacs-lisp
+  ;;设置C语言编译命令
+  (set 'compile-command' "gcc -g -Wall")
+
+  ;;定义f9为编译命令
+  (global-set-key [f9] 'compile) 
+
+  ;;显示行列号
+  (setq column-number-mode t)
+  (setq line-number-mode t)
+
+  ;;把c语言风格设置为k&r风格
+  (add-hook 'c-mode-hook
+	    '(lambda ()
+	       (c-set-style "k&r")))
+
+  ;;把C++语言风格设置为stroustrup风格
+  (add-hook 'c++-mode-hook
+	    '(lambda()
+	       (c-set-style "stroustrup")))
+#+END_SRC
+
+** R
+#+BEGIN_SRC emacs-lisp
+  ;; ESS
+  (setq  ess-tab-complete-in-script t)
+
+  ;; 解决交互窗口自动下拉
+  (setq comint-scroll-to-bottom-on-input t)
+  (setq comint-scroll-to-bottom-on-output t)
+  (setq comint-move-point-for-output t)
+#+END_SRC
+
+** perl
+#+BEGIN_SRC emacs-lisp
+  (defalias 'perl-mode 'cperl-mode)
+#+END_SRC
+
+** python
+#+BEGIN_SRC emacs-lisp
+  (when (executable-find "ipython")
+    (setq python-shell-interpreter "ipython"))
+
+  ;; 更改键
+  (eval-after-load "python"
+    '(define-key python-mode-map (kbd "<C-return>") 'python-shell-send-region))
+
+  ;;;; PYTHON-MODE configuration
+  (eval-after-load "python-mode"
+    '(define-key python-mode-map (kbd "C-c C-p") 'py-execute-region))
+  (eval-after-load "python-mode"
+    '(define-key python-mode-map (kbd "<C-return>") 'py-execute-line))
+
+  ;; elpy
+  (elpy-enable)
+  ;;;; 使用 jupyter 作为解释器
+  (setq python-shell-interpreter "jupyter"
+	python-shell-interpreter-args "console --simple-prompt"
+	python-shell-prompt-detect-failure-warning nil)
+  (add-to-list 'python-shell-completion-native-disabled-interpreters
+	       "jupyter")
+
+  (defvar myPackages
+    '(better-defaults
+      ein
+      elpy
+      flycheck
+      material-theme
+      py-autopep8))
+
+  ;; use flycheck not flymake with elpy
+  (when (require 'flycheck nil t)
+    (setq elpy-modules (delq 'elpy-module-flymake elpy-modules))
+    (add-hook 'elpy-mode-hook 'flycheck-mode))
+
+  ;; enable autopep8 formatting on save
+  (require 'py-autopep8)
+  (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+
+  ;; (setq python-shell-interpreter "python2"
+  ;;       python-shell-interpreter-args "-i")
+
+  ;; ;; ansi-color in ipython no working?
+  (setq py-python-command-args '("--colors=linux"))
+
+  ;; flymake
+  (when (load "flymake" t)
+    (defun flymake-pyflakes-init ()
+      (let* ((temp-file (flymake-init-create-temp-buffer-copy
+			 'flymake-create-temp-inplace))
+	     (local-file (file-relative-name
+			  temp-file
+			  (file-name-directory buffer-file-name))))
+	(list "pycheckers"  (list local-file))))
+    (add-to-list 'flymake-allowed-file-name-masks
+		 '("\\.py\\'" flymake-pyflakes-init)))
+#+END_SRC
+
+** shell
+#+BEGIN_SRC emacs-lisp
+  ;; (require 'shell-completion)
+  ;; shell 环境
+  (setq shell-file-name "/bin/bash")
+
+  ;; ansi for shell
+  (require 'ansi-color)
+
+  ;; 如果你希望使用一个支持 ANSI color 的 Shell 进程
+  (autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t) 
+  (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on t)
+
+  (defvar server-buffer-clients)
+  (when (and (fboundp 'server-start) (string-equal (getenv "TERM") 'xterm))
+    (server-start)
+    (defun fp-kill-server-with-buffer-routine ()
+      (and server-buffer-clients (server-done)))
+    (add-hook 'kill-buffer-hook 'fp-kill-server-with-buffer-routine))
+
+  ;; add local bashrc
+  (defun set-exec-path-from-shell-PATH ()
+    (let ((path-from-shell (replace-regexp-in-string
+			    "[ \t\n]*$"
+			    ""
+			    (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
+      (setenv "PATH" path-from-shell)
+      (setq eshell-path-env path-from-shell) ; for eshell users
+      (setq exec-path (split-string path-from-shell path-separator))))
+
+  (when window-system (set-exec-path-from-shell-PATH))
+#+END_SRC
+
+** multi term
+#+BEGIN_SRC emacs-lisp
+  ;; 通过设置multi-term-program变量
+  ;; 我们可以指定新建的terminal使用何种shell
+  (setq multi-term-program "/bin/bash")
+
+  (defadvice ansi-term (after advice-term-line-mode activate)
+    (term-line-mode))
+
+  ;;;Toggles term between line mode and char mode"
+  (defun jnm/term-toggle-mode ()
+    "Toggles term between line mode and char mode"
+    (interactive)
+    (if (term-in-line-mode)
+	(term-char-mode)
+      (term-line-mode)))
+#+END_SRC
+
+* note related
+** agenda
+#+BEGIN_SRC emacs-lisp
+  ;;insert-current-date
+  (defun insert-current-date ()
+    "Insert the current date"
+    (interactive "*")
+    (insert (format-time-string "%Y/%m/%d %H:%M:%S" (current-time))))
+
+  (global-set-key "\C-xd" 'insert-current-date)
+
+  (setq display-time-24hr-format t)
+  (setq display-time-day-and-date t)
+  (display-time)
+
+  (setq appt-issue-message t)
+
+  ;; 设置阴历显示，在 calendar 上用 pC 显示阴历
+  (setq chinese-calendar-celestial-stem
+	["甲" "乙" "丙" "丁" "戊" "己" "庚" "辛" "壬" "癸"])
+  (setq chinese-calendar-terrestrial-branch
+	["子" "丑" "寅" "卯" "辰" "巳" "戊" "未" "申" "酉" "戌" "亥"])
+
+  ;; 增加 agenda 文件
+  ;; recursively find .org files in provided directory 
+  ;; From https://stackoverflow.com/questions/11384516/how-to-make-all-org-files-under-a-folder-added-in-agenda-list-automatically
+  (load-library "find-lisp")
+
+  ;; (setq org-agenda-files (append
+  ;; (find-lisp-find-files "~/documents/phone/tagspace/notes/" "\.org.txt$")
+  ;; (find-lisp-find-files "~/documents/phone/tagspace/record/" "\.org.txt$")
+  ;; ))
+
+  ;; 添加 agenda 搜索文件
+  (setq org-agenda-files (directory-files-recursively "~/syncthing/notes/" "\\.md$"))
+  ;; (setq org-agenda-files '("~/syncthing/notes"))
+#+END_SRC
+
+** capture
+#+BEGIN_SRC emacs-lisp
+  ;; (setq org-default-notes-file (concat org-directory "/.notes.org"))
+  (global-set-key "\C-cc" 'org-capture)
+
+  (setq org-capture-templates   
+	'(
+
+	  ("t" "todo" entry
+	   (file (lambda () (capture-report-date-file  "~/syncthing/notes/v生活小计/住")))
+	   "From: ")
+
+	  ;; 应用程序
+	  ("a" "应用程序")
+	  ("aa" "Amber+MD+Dock" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<amber> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/a软件学习/Amber+MD"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("ag" "Gaussian" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<gaussian> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/a软件学习/gaussian"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("al" "Linux+Desktop" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<linux> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/a软件学习/linux"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("ap" "pymol" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<pymol> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/a软件学习/pymol+vmd"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("av" "vmd" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<vmd> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/a软件学习/pymol+vmd"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("as" "schrodinger" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<schrodinger> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/a软件学习/schrodinger"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("ao" "其他的一些应用" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/a软件学习/其他设置"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ;; 编程技术
+	  ("c" "编程技术")
+	  ("cr" "R" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<R> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/c编程学习/R"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("cs" "shell" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<shell> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/c编程学习/shell"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("cp" "python" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<python> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/c编程学习/python-perl"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("cr" "perl" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<perl> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/c编程学习/python-perl"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("ce" "emacs" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<emacs> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/c编程学习/emacs"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("cg" "git" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<git> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/c编程学习/git"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("cl" "latex" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<latex> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/c编程学习/latex"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ("z" "代码库")
+	  ("zp" "pic+R" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<src+pic+R> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/z代码库"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("zf" "分子模拟处理脚本" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<src+dynamics> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/z代码库"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("zg" "Gaussian" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<src+gaussian> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/z代码库"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("zo" "Others" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<src+other> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/z代码库"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ("s" "科研笔记")
+	  ("sa" "课题笔记" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<sci+> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/s科研笔记/课题笔记"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("sx" "科研想法" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<sci+idea> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/s科研笔记/科研想法"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("so" "其他" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<sci+other> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/s科研笔记/其他"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ("t" "理科学习")
+	  ("ts" "数学笔记" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<tech+math> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/t理科学习"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("th" "化学笔记" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<tech+chem> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/t理科学习"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ("l" "文科学习")
+	  ("ly" "英语学习" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<lit+english> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/l文科学习/e英语学习"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("lh" "社会百态" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<lit+social> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/l文科学习/h社会百态"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("ls" "诗歌散文" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<lit+poems> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/l文科学习/s诗歌散文"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("lx" "小说" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<lit+story> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/l文科学习/x小说"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ("v" "生活小记")
+	  ("vy" "衣" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<live+cloth> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/v生活小记/衣"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("vs" "食" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<live+food> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/v生活小记/食"))))
+	   "Date：%U\nFrom: \n\n%?")
+	  ("vz" "住" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<live> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/v生活小记/住"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ("vx" "行" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<live+move> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/v生活小记/行"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ("vt" "用" plain 
+	   (file (lambda ()  (let ((name (read-string "FileName: " "<live+tool> ")))
+			       (expand-file-name (format "%s.md" name)
+						 "~/syncthing/notes/v生活小记/用"))))
+	   "Date：%U\nFrom: \n\n%?")
+
+	  ))
+#+END_SRC
+** consult
+#+begin_src emacs-lisp
+  ;; 使用 consult-ripgrep 进行笔记内容搜索
+  (require 'consult)
+  (require 'vertico)
+  (vertico-mode)
+
+  ;; 定义搜索笔记的快捷命令
+  (defun consult-rg-search-notes ()
+    "Search notes directory using consult-ripgrep. With live-preview."
+    (interactive)
+    (let ((consult-ripgrep-command "rg --null --ignore-case --line-buffered --color=always --max-columns=1000 --no-heading --line-number . -e ARG OPTS"))
+      (consult-ripgrep "~/syncthing/notes/")))
+  (global-set-key (kbd "C-c r n") 'consult-rg-search-notes)
+
+  ;; consult 的其他配置
+  ;; Example configuration for Consult
+  (use-package consult
+    ;; Replace bindings. Lazily loaded due by `use-package'.
+    :bind (;; C-c bindings in `mode-specific-map'
+	   ("C-c M-x" . consult-mode-command)
+	   ("C-c h" . consult-history)
+	   ("C-c k" . consult-kmacro)
+	   ("C-c m" . consult-man)
+	   ("C-c i" . consult-info)
+	   ([remap Info-search] . consult-info)
+	   ;; C-x bindings in `ctl-x-map'
+	   ("C-x M-:" . consult-complex-command)     ;; orig. repeat-complex-command
+	   ("C-x b" . consult-buffer)                ;; orig. switch-to-buffer
+	   ;; ("C-x 4 b" . consult-buffer-other-window) ;; orig. switch-to-buffer-other-window
+	   ;; ("C-x 5 b" . consult-buffer-other-frame)  ;; orig. switch-to-buffer-other-frame
+	   ("C-x r b" . consult-bookmark)            ;; orig. bookmark-jump
+	   ("C-x p b" . consult-project-buffer)      ;; orig. project-switch-to-buffer
+	   ;; Custom M-# bindings for fast register access
+	   ("M-#" . consult-register-load)
+	   ("M-'" . consult-register-store)          ;; orig. abbrev-prefix-mark (unrelated)
+	   ("C-M-#" . consult-register)
+	   ;; Other custom bindings
+	   ("M-y" . consult-yank-pop)                ;; orig. yank-pop
+	   ;; M-g bindings in `goto-map'
+	   ("M-g e" . consult-compile-error)
+	   ("M-g f" . consult-flymake)               ;; Alternative: consult-flycheck
+	   ("M-g g" . consult-goto-line)             ;; orig. goto-line
+	   ("M-g M-g" . consult-goto-line)           ;; orig. goto-line
+	   ("M-g o" . consult-outline)               ;; Alternative: consult-org-heading
+	   ("M-g m" . consult-mark)
+	   ("M-g k" . consult-global-mark)
+	   ("M-g i" . consult-imenu)
+	   ("M-g I" . consult-imenu-multi)
+	   ;; M-s bindings in `search-map'
+	   ;; ("M-s d" . consult-find)                  ;; Alternative: consult-fd
+	   ;; ("M-s c" . consult-locate)
+	   ;; ("M-s g" . consult-grep)
+	   ("M-s G" . consult-git-grep)
+	   ("M-s r" . consult-ripgrep)
+	   ("M-s l" . consult-line)
+	   ("M-s L" . consult-line-multi)
+	   ("M-s k" . consult-keep-lines)
+	   ("M-s u" . consult-focus-lines)
+	   ;; Isearch integration
+	   ("M-s e" . consult-isearch-history)
+	   :map isearch-mode-map
+	   ("M-e" . consult-isearch-history)         ;; orig. isearch-edit-string
+	   ("M-s e" . consult-isearch-history)       ;; orig. isearch-edit-string
+	   ("M-s l" . consult-line)                  ;; needed by consult-line to detect isearch
+	   ("M-s L" . consult-line-multi)            ;; needed by consult-line to detect isearch
+	   ;; Minibuffer history
+	   :map minibuffer-local-map
+	   ("M-s" . consult-history)                 ;; orig. next-matching-history-element
+	   ("M-r" . consult-history))                ;; orig. previous-matching-history-element
+
+    ;; Enable automatic preview at point in the *Completions* buffer. This is
+    ;; relevant when you use the default completion UI.
+    :hook (completion-list-mode . consult-preview-at-point-mode)
+
+    ;; The :init configuration is always executed (Not lazy)
+    :init
+
+    ;; Optionally configure the register formatting. This improves the register
+    ;; preview for `consult-register', `consult-register-load',
+    ;; `consult-register-store' and the Emacs built-ins.
+    (setq register-preview-delay 0.5
+	  register-preview-function #'consult-register-format)
+
+    ;; Optionally tweak the register preview window.
+    ;; This adds thin lines, sorting and hides the mode line of the window.
+    (advice-add #'register-preview :override #'consult-register-window)
+
+    ;; Use Consult to select xref locations with preview
+    (setq xref-show-xrefs-function #'consult-xref
+	  xref-show-definitions-function #'consult-xref)
+
+    ;; Configure other variables and modes in the :config section,
+    ;; after lazily loading the package.
+    :config
+
+    ;; Optionally configure preview. The default value
+    ;; is 'any, such that any key triggers the preview.
+    ;; (setq consult-preview-key 'any)
+    ;; (setq consult-preview-key "M-.")
+    ;; (setq consult-preview-key '("S-<down>" "S-<up>"))
+    ;; For some commands and buffer sources it is useful to configure the
+    ;; :preview-key on a per-command basis using the `consult-customize' macro.
+    (consult-customize
+     consult-theme :preview-key '(:debounce 0.2 any)
+     consult-ripgrep consult-git-grep consult-grep
+     consult-bookmark consult-recent-file consult-xref
+     consult--source-bookmark consult--source-file-register
+     consult--source-recent-file consult--source-project-recent-file
+     ;; :preview-key "M-."
+     :preview-key '(:debounce 0.4 any))
+
+    ;; Optionally configure the narrowing key.
+    ;; Both < and C-+ work reasonably well.
+    (setq consult-narrow-key "<") ;; "C-+"
+
+    ;; Optionally make narrowing help available in the minibuffer.
+    ;; You may want to use `embark-prefix-help-command' or which-key instead.
+    ;; (define-key consult-narrow-map (vconcat consult-narrow-key "?") #'consult-narrow-help)
+
+    ;; By default `consult-project-function' uses `project-root' from project.el.
+    ;; Optionally configure a different project root function.
+    ;;;; 1. project.el (the default)
+    ;; (setq consult-project-function #'consult--default-project--function)
+    ;;;; 2. vc.el (vc-root-dir)
+    ;; (setq consult-project-function (lambda (_) (vc-root-dir)))
+    ;;;; 3. locate-dominating-file
+    ;; (setq consult-project-function (lambda (_) (locate-dominating-file "." ".git")))
+    ;;;; 4. projectile.el (projectile-project-root)
+    ;; (autoload 'projectile-project-root "projectile")
+    ;; (setq consult-project-function (lambda (_) (projectile-project-root)))
+    ;;;; 5. No project support
+    ;; (setq consult-project-function nil)
+    )
+#+end_src
+* org
+** base
+#+BEGIN_SRC emacs-lisp
+  ;; org-mode
+  (add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
+  (add-to-list 'auto-mode-alist '("\\.log.org\\'" . org-mode))
+  (add-to-list 'auto-mode-alist '("\\.org.log\\'" . org-mode))
+  (add-to-list 'auto-mode-alist '("\\.org.md\\'" . org-mode))
+  (global-set-key "\C-cl" 'org-store-link)
+  (global-set-key "\C-ca" 'org-agenda)
+  (global-set-key "\C-cb" 'org-iswitchb)
+  (global-set-key "\C-c[" 'org-agenda-file-to-front)
+  (global-set-key "\C-c]" 'org-remove-file)
+
+  ;; setup files ending in “.org.txt” to open in org-mode
+  (add-to-list 'auto-mode-alist '("\\.org.txt\\'" . org-mode))
+  (add-to-list 'auto-mode-alist '("\\.org.md\\'"  . org-mode))
+
+  (add-hook 'org-mode-hook 'turn-on-font-lock)  
+  (setq org-src-fontify-natively t) ;; 代码高亮
+
+  ;; turn on soft wrapping mode for org mode
+  (add-hook 'org-mode-hook
+	    (lambda () (setq truncate-lines nil)))
+
+  ;; org-mode 8 no odt or mkdown export solvation
+  (eval-after-load "org"
+    '(require 'ox-md nil t)
+    )
+  (eval-after-load "org"
+    '(require 'ox-odt nil t)
+    )
+
+  ;; global keybinding
+  (global-set-key "\C-c L" 'org-insert-link-global)
+  (global-set-key "\C-c o" 'org-open-at-point-global)
+
+  ;; set org-todo-keywords
+  (setq org-todo-keywords 
+	'((sequence "TODO" "VERIFY" "|" "DONE" "DELAYED" "DELEGATED"))) 
+
+  ;;item time
+  (setq org-log-done 'time) 
+
+  ;;iimage minomode
+  (autoload 'iimage-mode "iimage" "Support Inline image minor mode." t)
+  (autoload 'turn-on-iimage-mode "iimage" "Turn on Inline image minor mode." t)
+
+  (defun org-toggle-iimage-in-org ()
+    "display images in your org file"
+    (interactive)
+    (if (face-underline-p 'org-link)
+	(set-face-underline-p 'org-link nil)
+      (set-face-underline-p 'org-link t))
+    (iimage-mode))
+
+  ;;子项目都被标记为完成时，父项目自动标记为完成
+  (defun org-summary-todo (n-done n-not-done)
+    "Switch entry to DONE when all subentries are done, to TODO otherwise."
+    (let (org-log-done org-log-states)  ; turn off logging
+      (org-todo (if (= n-not-done 0) "DONE" "TODO"))))
+
+  (add-hook 'org-after-todo-statistics-hook 'org-summary-todo)
+
+  ;; input some greek chars
+  (global-set-key (kbd "C-x 8 a") "α")
+  (global-set-key (kbd "C-x 8 b") "β")
+  (global-set-key (kbd "C-x 8 d") "δ")
+  (global-set-key (kbd "C-x 8 e") "ε")
+  (global-set-key (kbd "C-x 8 w") "ψ")
+  (global-set-key (kbd "C-x 8 v") "Å")
+
+  (global-set-key (kbd "C-x 8 D") "Δ")
+  (global-set-key (kbd "C-x 8 W") "Ψ")
+
+  ;; other
+  (global-set-key (kbd "C-x 7 a") (lambda () (interactive) (insert "Å")))
+
+#+END_SRC
+
+** babel
+#+BEGIN_SRC emacs-lisp
+  ;; in org 8 this seems not to work
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((R . t)
+     (python . t)
+     (shell . t) 
+     (perl . t)
+     (emacs-lisp . t)
+     (ditaa . t)
+     (matlab . t)
+     (octave . t)
+     (C . t)
+     (dot . t)
+     (latex . t)))
+
+  (setq org-confirm-babel-evaluate nil) ;;设置输出时不必要询问是否编译代码块　in babel
+  ;; (load "auctex.el" nil t t)
+  ;; (load "preview-latex.el" nil t t)
+  (setq org-latex-create-formula-image-program 'imagemagick)
+#+END_SRC
+
+** publish git io                                                        
+#+BEGIN_SRC emacs-lisp
+  (setq org-publish-project-alist
+	'(
+
+	  ("org-chxp"
+	   ;; Path to your org files.
+	   :base-directory "~/syncthing/src/writing/"
+	   :base-extension "org"
+
+	   ;; Path to your Jekyll project.
+	   :publishing-directory "~/syncthing/src/chxp.github.io/_posts/"
+	   :recursive t
+	   :publishing-function org-publish-org-to-html
+	   :headline-levels 4 
+	   :html-extension "html"
+	   :body-only t ;; Only export section between <body> </body>
+	   )
+
+	  ("org-static-chxp"
+	   :base-directory "~/syncthing/src/writing/"
+	   :base-extension "css\\|js\\|png\\|jpg\\|gif\\|pdf\\|mp3\\|ogg\\|swf\\|php"
+	   :publishing-directory "~/syncthing/src/chxp.github.io/_posts/"
+	   :recursive t
+	   :publishing-function org-publish-attachment)
+
+	  ("chxp" :components ("org-chxp" "org-static-chxp"))
+	  ))
+#+END_SRC
+
+** latex
+#+BEGIN_SRC emacs-lisp
+  ;; (require 'ox-bibtex) 
+
+  ;; Use latexmk to generate the thesis pdf
+  (setq org-latex-pdf-process
+	(quote 
+	 ("latexmk -f -xelatex -silent %f")))
+
+  ;;(setq reftex-cite-format 'natbib)
+
+  (setq org-export-latex-listings t)
+  ;;(setq reftex-bibliography-commands '("bibliography" "nobibliography" "addbibresource"))
+
+  (unless (boundp 'org-latex-packages-alist)
+    (setq org-latex-packages-alist nil))
+
+  ;; 使用Listings宏包格式化源代码(只是把代码框用listing环境框起来，还需要额外的设置)
+  (setq org-export-latex-listings t)
+  ;; Make Org use ido-completing-read for most of its completing prompts.
+  (setq org-completion-use-ido t)
+
+  (setq ps-paper-type 'a4
+	ps-font-size 16.0
+	ps-print-header nil
+	ps-landscape-mode nil)
+#+END_SRC
+
+** template load
+#+BEGIN_SRC emacs-lisp
+  (load-file "~/syncthing/emacs/es_template/latex_thesis.lisp")
+  (load-file "~/syncthing/emacs/es_template/latex_general.lisp")
+  (load-file "~/syncthing/emacs/es_template/latex_extra.lisp")
+#+END_SRC
+
+** easy template by tempo
+#+begin_src emacs-lisp
+  (tempo-define-template "Gaussina-ONIOM-energy-table" 
+			 '(   "| file  |  energy  |  low_model  |  high_model  | low_real  |" n
+			      > "|----" n
+			      > "|" p "  | ||||")
+			 "<go"
+			 "Insert a Gaussian ONIOM energy input table" 
+			 'org-tempo-tags)
+#+end_src
+** org-ref
+#+BEGIN_SRC emacs-lisp
+  (setq bibtex-completion-bibliography "~/syncthing/emacs/zoteroh.bib"
+	bibtex-completion-library-path "~/syncthing/emacs/zoteroh.bib")
+  (setq org-ref-default-bibliography '("~/syncthing/emacs/zoteroh.bib")
+	org-ref-pdf-directory "~/syncthing/zotero/")
+  ;; (require 'org-ref)
+  ;; (require 'org-ref-citeproc)
+  ;; (add-hook 'org-export-before-parsing-hook 'orcp-citeproc)
+#+END_SRC
+
+** reftex
+#+BEGIN_SRC emacs-lisp
+  (setq reftex-default-bibliography
+	(quote
+	 ("default.bib" "~/syncthing/emacs/zoteroh.bib"))) 
+
+  ;; (setq reftex-plug-into-AUCTeX t)
+
+  (add-hook 'org-mode-hook
+	    (lambda ()
+	      (define-key org-mode-map (kbd "C-c (") 'reftex-citation)
+	      (define-key org-mode-map (kbd "C-c )") 'org-ref-helm-insert-cite-link)
+	      (define-key org-mode-map (kbd "C-c 0") 'org-ref-helm-insert-cite-link)
+	      )
+	    )
+
+  ;; ;; reftex formats, makes same as org-ref
+  ;; (setq reftex-cite-format "cite:%l")
+  ;; (reftex-mode t)
+#+END_SRC
+
+** org-cite
+#+begin_src emacs-lisp
+  (setq org-cite-global-bibliography
+	'("~/syncthing/emacs/zoteroh.bib"))
+
+  ;; From: https://github.com/tshu-w/.emacs.d/blob/master/lisp/lang-org.el
+  (setq org-cite-export-processors '((beamer  natbib)
+				     (latex  natbib)
+				     (t  csl))
+	org-cite-global-bibliography '("~/syncthing/emacs/zoteroh.bib"))
+
+  (add-hook 'org-mode-hook
+	    (lambda ()
+	      (define-key org-mode-map (kbd "C-c i") 'org-cite-insert)
+	      )
+	    )
+
+  ;; (org-cite-export-processors
+  ;;  '((md . (csl "chicago-fullnote-bibliography.csl"))   ; Footnote reliant
+  ;;    (latex . biblatex)                                 ; For humanities
+  ;;    (odt . (csl "chicago-fullnote-bibliography.csl"))  ; Footnote reliant
+  ;;    (t . (csl "modern-language-association.csl"))      ; Fallback
+  ;;    ))
+
+  ;; cite_export biblatex/natbib need load it
+  (require 'oc-biblatex)
+  (require 'oc-natbib)
+#+end_src
+
+** ess
+#+begin_src emacs-lisp
+  ;; ;; ess
+  ;; (add-to-list 'load-path "~/.emacs.d/ess")
+  ;; (require 'ess-site)
+  ;; ;; (load "ess-autoloads")
+
+  ;; (add-to-list 'load-path "/usr/share/emacs/site-lisp/elpa-src/ess-18.10.2")
+  ;; (require 'ess-site)
+
+  (add-to-list 'load-path "/usr/share/emacs/28.1/site-lisp/ess")
+  (require 'ess-site)
+  ;; replacing ; with <- in ess-mode after 2019
+  (define-key ess-r-mode-map ";" #'ess-insert-assign)
+  (define-key inferior-ess-r-mode-map ";" #'ess-insert-assign)
+  (define-key ess-mode-map (kbd "C-.") " %>% ")
+  (define-key inferior-ess-mode-map (kbd "C-.") " %>% ")
+#+end_src
+** time setting
+#+begin_src emacs-lisp
+  (defun org-insert-now-timestamp-inactive ()
+    (interactive)
+    (let ((current-prefix-arg '(16)))
+      (call-interactively 'org-time-stamp-inactive)))
+  (define-key org-mode-map (kbd "C-c n") 'org-insert-now-timestamp-inactive)
+#+end_src
+** make org similar to typora
+#+begin_src emacs-lisp
+  ;; From: https://emacs.stackexchange.com/questions/56162/package-for-live-inline-rendering-for-markdown-org-mode-text-with-css-styling
+
+  ;; ;; focus mode
+  ;; (use-package focus
+  ;;   :ensure t)
+
+  ;; hide emphasis markers
+  ;; (setq org-hide-emphasis-markers t)
+  ;; (olivetti-mode +1)
+  ;; (visual-line-mode +1)
+#+end_src
+** org use different light theme
+#+begin_src emacs-lisp
+  ;; ;; ;; Option 1: Per buffer
+  ;; ;; (add-hook 'org-mode-hook #'org-modern-mode)
+  ;; ;; (add-hook 'org-agenda-finalize-hook #'org-modern-agenda)
+
+  ;; ;; bullet
+  (use-package org-bullets
+    :config
+    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1))))
+
+  (custom-set-faces
+   ;; custom-set-faces was added by Custom.
+   ;; If you edit it by hand, you could mess it up, so be careful.
+   ;; Your init file should contain only one such instance.
+   ;; If there is more than one, they won't work right.
+   '(org-document-title ((t (:weight bold :height 1.5 :foreground "#A50021" ))))
+   '(org-document-info  ((t (:weight bold :height 1.1 :foreground "#0000FF" ))))
+   '(org-level-1    ((t (:height 1.3 :weight bold :foreground "#A50021" :extend t :box (:line-width (1 . 3) :color "gold" :style pressed-button)  ))))
+   '(org-level-2    ((t (:height 1.2 :weight bold :foreground "#0000FF" ))))
+   '(org-level-3    ((t (:height 1.1 :weight bold :foreground "#133984" ))))
+   '(org-level-4    ((t (:inherit outline-4 :height 1.0))))
+   '(org-level-5    ((t (:inherit outline-5 :height 1.0))))
+   '(org-table      ((t (:foreground  "blue"))))
+   '(org-block-begin-line    ((t (:foreground "#FF7F50" :weight bold :height 0.8  :background "gray91"))))
+   '(org-block      ((t (:background  "gray93" ))))
+   '(org-tag        ((t (:weight bold :height 0.9))))
+   '(org-checkbox   ((t (:background "light cyan" :foreground "orange red" :box (:line-width (2 . 2) :color "dark cyan") :weight extra-bold))))
+   '(org-date       ((t (:foreground "#D2691E" :background "white" :weight bold))))
+   ;; '(org-date       ((t (:background "light cyan" :foreground "#D2691E" :box (:line-width (3 . 3) :color "light cyan" :style released-button) :underline "#D2691E" :weight bold))))
+   '(org-link       ((t (:underline (:color foreground-color :style line :backgound "yellow") :foreground "#FF00FF"))))
+   '(org-meta-line  ((t (:extend t :background "#E9EBFE" :foreground "#8A3324"))))
+   '(org-todo       ((t (:foreground "orange red" :weight bold))))
+   '(org-done       ((t (:foreground "green4" :weight bold))))
+   )
+
+  (defun my-org-mode-faces-simple ()
+    ;; (face-remap-add-relative  'default :background "white" :foreground "black")
+    (face-remap-add-relative  'default  '(:background "white" :foreground "black"))
+    ;; ;; 下一行会影响 org-mode 中的强调，舍去
+    ;; (face-remap-add-relative  'bold  '(:bold t :weight bold))
+    ;;   (face-remap-add-relative  'bold-italic  '(:italic t :bold t :slant italic :weight bold))
+    ;;   (face-remap-add-relative  'flyspell-duplicate-face  '(:bold t :foreground "Gold3" :underline t :weight bold))
+    ;;   (face-remap-add-relative  'flyspell-incorrect-face  '(:bold t :foreground "OrangeRed" :underline t :weight bold))
+    ;; 这边影响的都是代码框内的内容
+    (face-remap-add-relative  'font-lock-builtin-face  '(:foreground "orange4"))
+    (face-remap-add-relative  'font-lock-comment-face  '(:foreground "Firebrick"))
+    (face-remap-add-relative  'font-lock-constant-face  '(:foreground "CadetBlue" :weight bold))
+    (face-remap-add-relative  'font-lock-doc-face  '(:foreground "RosyBrown"))
+    (face-remap-add-relative  'font-lock-doc-string-face  '(:foreground "RosyBrown"))
+    (face-remap-add-relative  'font-lock-function-name-face  '(:foreground "Blue" :weight bold))
+    (face-remap-add-relative  'font-lock-keyword-face  '(:foreground "Purple" :weight bold))
+    (face-remap-add-relative  'font-lock-preprocessor-face  '(:foreground "CadetBlue"))
+    (face-remap-add-relative  'font-lock-reference-face  '(:foreground "Orchid"))
+    (face-remap-add-relative  'font-lock-string-face  '(:foreground "Forestgreen"))
+    ;; (face-remap-add-relative  'font-lock-string-face  '(:foreground "blue violet"))
+    (face-remap-add-relative  'font-lock-type-face  '(:foreground "ForestGreen" :weight bold))
+    (face-remap-add-relative  'font-lock-variable-name-face  '(:foreground "DarkGoldenrod" :weight bold))
+    (face-remap-add-relative  'font-lock-warning-face  '(:bold t :foreground "Red" :weight bold))
+    ;; 选择内容时的颜色
+    (face-remap-add-relative  'region nil :background "gold")
+    ;;   (face-remap-add-relative  'fringe  '(:background "grey95"))
+    ;;   (face-remap-add-relative  'hi-black-b  '(:bold t :weight bold))
+    ;;   (face-remap-add-relative  'hi-black-hb  '(:bold t  :weight bold :height 1.67))
+    ;; (face-remap-add-relative  'hi-blue  '(:background "light blue"))
+    ;; (face-remap-add-relative  'hi-blue-b  '(:bold t :foreground "blue" :weight bold))
+    ;;   (face-remap-add-relative  'hi-green  '(:background "green"))
+    ;;   (face-remap-add-relative  'hi-green-b  '(:bold t :foreground "green" :weight bold))
+    ;;   (face-remap-add-relative  'hi-pink  '(:background "pink"))
+    ;;   (face-remap-add-relative  'hi-red-b  '(:bold t :foreground "red" :weight bold))
+    ;;   (face-remap-add-relative  'hi-yellow  '(:background "yellow"))
+    ;;   (face-remap-add-relative  'highlight  '(:background "darkseagreen2"))
+    ;;   (face-remap-add-relative  'highlight-changes-delete-face  '(:foreground "red" :underline t))
+    ;;   (face-remap-add-relative  'highlight-changes-face  '(:foreground "red"))
+    ;;   (face-remap-add-relative  'italic  '(:italic t :slant italic))
+    ;;   (face-remap-add-relative  'primary-selection  '(:background "lightgoldenrod2"))
+    ;;   (face-remap-add-relative  'region  '(:background "lightgoldenrod2"))
+    ;;   (face-remap-add-relative  'tex-math-face  '(:foreground "RosyBrown"))
+    ;;   (face-remap-add-relative  'texinfo-heading-face  '(:foreground "Blue"))
+    )
+  (add-hook 'org-mode-hook 'my-org-mode-faces-simple)
+
+  ;; 当 TODO 变成 DONE 不改变标题文字的格式
+  (setq org-fontify-done-headline nil)
+#+end_src
+** svg tag mode
+由于 `svg tag mode` 与字体大小、行距等相关，因此这些配置全部都放到这里来。
+此部分包含 TODO 关键词的各项设置。
+#+begin_src emacs-lisp
+  ;;; Setting English Font
+  (set-face-attribute
+   'default nil :font "Liberation Mono 13")
+  ;;; Chinese Font
+  (dolist (charset '(kana han symbol cjk-misc bopomofo))
+    (set-fontset-font (frame-parameter nil 'font)
+		      charset
+		      (font-spec :family "Sarasa Term SC Nerd" :size 24))
+    ;; (font-spec :family "WenQuanyi Micro Hei" :size 26))
+    )
+
+  ;; 行间距离
+  (add-hook 'org-mode-hook
+	    (lambda ()
+	      ;; (kill-local-variable 'line-spacing) ;; 如果之前设置的 local 变量没有
+	      ;; 删除，可能会导致后面的设置无效。
+	      (setq-local default-text-properties
+			  '(
+			    line-spacing 0.20     ;; 必须两项组合，
+			    line-height  1.20     ;; 才能起到效果。
+			    ))))
+  ;; global
+  (setq default-text-properties
+	'(
+	  line-spacing 0.15     ;; 必须两项组合，
+	  line-height  1.15     ;; 才能起到效果。
+	  ))
+
+  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  ;; svg-tag-mode
+  (require 'svg-tag-mode)
+
+  ;; tag color
+  (defface svgtag-tag-a
+    '((t :foreground "black"  :background "gray95"      :box "gray90"  
+	 )) "Face for default tag" :group nil)
+  ;; todo color
+  (defface svgtag-todo-a
+    '((t :foreground "white" :background "purple"      :box "purple" 
+	 )) "Face for default tag" :group nil)
+  (defface svgtag-todo-b
+    '((t :foreground "white" :background "red"         :box "red" 
+	 )) "Face for default tag" :group nil)
+  (defface svgtag-todo-c
+    '((t :foreground "white" :background "orange red"         :box "red" 
+	 )) "Face for default tag" :group nil)
+  ;; done color
+  (defface svgtag-done-a
+    '((t :foreground "white" :background "RoyalBlue1" :box "RoyalBlue1" 
+	 )) "Face for default tag" :group nil)
+  ;; (defface svgtag-done-a
+  ;;   '((t :foreground "white" :background "DeepSkyBlue" :box "DeepSkyBlue" 
+  ;;        )) "Face for default tag" :group nil)
+  (defface svgtag-done-b
+    '((t :foreground "white" :background "forestgreen" :box "forestgreen" 
+	 )) "Face for default tag" :group nil)
+  (defface svgtag-done-c
+    '((t :foreground "white" :background "gray72"     :box "#3CB371"  
+	 )) "Face for default tag" :group nil)
+  (defface svgtag-done-d
+    '((t :foreground "white" :background "#FFE4B5"    :box "#FFE4B5"  
+	 )) "Face for default tag" :group nil)
+
+  ;; date color
+  (defface svgtag-date-a
+    '((t :foreground "#D2691E" :background "white" :box "#D2691E" 
+	 )) "Face for default tag" :group nil)
+
+  ;; date/time
+  (defconst date-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}")
+  (defconst time-re "[0-9]\\{2\\}:[0-9]\\{2\\}")
+  (defconst day-re "[A-Za-z]\\{3\\}")
+  (defconst day-time-re (format "\\(%s\\)? ?\\(%s\\)?" day-re time-re))
+
+  ;;;; citations
+  (custom-set-faces
+   '(org-cite     ((t (:extend nil :background "white" :foreground "forestgreen" :height 0.9))))
+   '(org-cite-key ((t (:background "white" :foreground "forestgreen" :underline "forestgreen" :height 0.9))))
+   )
+  ;; cite color
+  (defface svgtag-cite-head-a
+    '((t :foreground "forestgreen"  :background "white" :box "white"  
+	 )) "Face for default tag" :group nil)
+
+  ;; generation
+  (setq  svg-tag-tags
+	 `(
+	   ;; Org tags
+	   (":\\([A-Za-z0-9_@]+\\):" . ((lambda (tag) (svg-tag-make tag :face 'svgtag-tag-a
+								 :padding 0 :margin 0 :height 0.66 :ascent 80 :radius 8))))
+	   ;; (":\\([A-Za-z0-9]+[ \-]\\)" . ((lambda (tag) tag)))
+
+	   ;; ;; Task priority
+	   ;; ("\\[#[A-Z]\\]" . ( (lambda (tag)
+	   ;; 		      (svg-tag-make tag :face 'org-priority 
+	   ;; 				    :beg 2 :end -1 :margin 0))))
+
+	   ;; TODO
+	   ("TODO"     . ((lambda (tag) (svg-tag-make "TODO" :face 'svgtag-todo-a 
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("WAIT"     . ((lambda (tag) (svg-tag-make "WAIT" :face 'svgtag-todo-a 
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("VERY"     . ((lambda (tag) (svg-tag-make "VERY" :face 'svgtag-todo-b 
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("VERIFY"   . ((lambda (tag) (svg-tag-make "VERY" :face 'svgtag-todo-b 
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("RRUN"     . ((lambda (tag) (svg-tag-make "RRUN" :face 'svgtag-todo-b 
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("ANAA"     . ((lambda (tag) (svg-tag-make "ANAA" :face 'svgtag-todo-c 
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ;; DONE
+	   ("FISH"     . ((lambda (tag) (svg-tag-make "FISH" :face 'svgtag-done-a 
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("FINISH"   . ((lambda (tag) (svg-tag-make "FISH" :face 'svgtag-done-a
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("DONE"     . ((lambda (tag) (svg-tag-make "DONE" :face 'svgtag-done-a
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("CANC"     . ((lambda (tag) (svg-tag-make "CANC" :face 'svgtag-done-a
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("CANCELED" . ((lambda (tag) (svg-tag-make "CANC" :face 'svgtag-done-c
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("DELAYED"  . ((lambda (tag) (svg-tag-make "DELY" :face 'svgtag-done-a
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("DELE"     . ((lambda (tag) (svg-tag-make "DELE" :face 'svgtag-done-c
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70 :stroke 2))))
+	   ("DELEGATED". ((lambda (tag) (svg-tag-make "DELE" :face 'svgtag-done-c
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70 :stroke 2))))
+	   ("SELC"     . ((lambda (tag) (svg-tag-make "SELC" :face 'svgtag-done-b
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+	   ("PEND"     . ((lambda (tag) (svg-tag-make "PEND" :face 'svgtag-done-d
+						      :margin 0  :radius 6  :padding 0.1  :height 0.8 :ascent 70))))
+
+
+	   ;; Active date (with or without day name, with or without time)
+	   (,(format "\\(<%s>\\)" date-re) .
+	    ((lambda (tag)
+	       (svg-tag-make tag :beg 1 :end -1 :margin 0))))
+	   (,(format "\\(<%s \\)%s>" date-re day-time-re) .
+	    ((lambda (tag)
+	       (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0 :face 'svgtag-date-a
+			     :height 0.62  :radius 8  :padding -0.1))))
+	   (,(format "<%s \\(%s>\\)" date-re day-time-re) .
+	    ((lambda (tag)
+	       (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0 :face 'svgtag-date-a
+			     :height 0.62  :radius 8  :padding -0.1))))
+
+	   ;; Inactive date  (with or without day name, with or without time)
+	   (,(format "\\(\\[%s\\]\\)" date-re) .
+	    ((lambda (tag)
+	       (svg-tag-make tag :beg 1 :end -1 :margin 0 :face 'org-date))))
+	   (,(format "\\(\\[%s \\)%s\\]" date-re day-time-re) .
+	    ((lambda (tag)
+	       (svg-tag-make tag :beg 1 :inverse nil :crop-right t :margin 0 :face 'svgtag-date-a
+			     :height 0.62  :radius 8  :padding -0.1))))
+	   (,(format "\\[%s \\(%s\\]\\)" date-re day-time-re) .
+	    ((lambda (tag)
+	       (svg-tag-make tag :end -1 :inverse t :crop-left t :margin 0 :face 'svgtag-date-a
+			     :height 0.62  :radius 8  :padding -0.1))))
+
+	   ;; Citation of the form only the key of cite
+	   ("\\(\\[cite:\\)@" . ((lambda (tag)
+				   (svg-tag-make "cite" :face 'svgtag-cite-head-a
+						 :inverse t :margin 0 :padding 0.2 :radius 10 :height 0.6 :ascent 90))))
+
+	   ))
+
+  (svg-tag-mode t)
+  ;; (add-hook 'org-mode-hook `(svg-tag-mode t))
+#+end_src
+
+* key bind for myself
+#+begin_src emacs-lisp
+  ;; 跳到指定目录或者文件
+  (global-set-key (kbd "C-x ,") 'lawlist-bookmark)
+  (defun lawlist-bookmark (choice)
+    "Choices for directories and files."
+    (interactive "c[o]AC analysis | [e]macs init file | [n]otes | [s]yncthing | [h]ome")
+    (cond
+     ((eq choice ?o)
+      (dired "/media/chxp/moveh/exp/oac_all/05_ana_oad/")
+      (message "Opened:  %s" (buffer-name)))
+     ((eq choice ?e)
+      (find-file "~/syncthing/emacs/")
+      (message "Opened:  %s" (buffer-name)))
+     ((eq choice ?s)
+      (find-file "~/syncthing")
+      (message "Opened:  %s" (buffer-name)))
+     ((eq choice ?n)
+      (find-file "~/syncthing/notes/")
+      (message "Opened:  %s" (buffer-name)))
+     ((eq choice ?h)
+      (find-file "~/")
+      (message "Opened:  %s" (buffer-name)))
+     (q (message "Quit"))))
+#+end_src
+
